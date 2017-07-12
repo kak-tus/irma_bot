@@ -1,0 +1,24 @@
+---
+hypnotoad:
+  listen: [ 'http://0.0.0.0:9000' ]
+  workers: 1
+  proxy: 1
+  pid_file: /var/run/irma/hypnotoad.pid
+
+irma:
+  user: www-data
+  group: www-data
+
+  secrets:
+    - some_secret
+
+  api: '${data_dir}/irma/api.yml'
+
+  telegram:
+    notify_url: 'https://example.com'
+    notify_keys:
+      production: some_key
+      development: some_key
+    api_keys:
+      production: some_key
+      development: some_key

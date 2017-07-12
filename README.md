@@ -1,2 +1,1 @@
-# irma_bot
-Irma AntiSpam Bot
+# @irma_bot

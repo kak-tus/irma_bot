@@ -1,0 +1,50 @@
+---
+swagger: '2.0'
+info:
+  title: Irma API
+  description: API
+  version: 1
+basePath: /api/v1
+paths:
+  '/telegram/message/{notify_key}':
+    post:
+      x-mojo-to: 'Root#message'
+      x-mojo-name: telegram_message
+      summary: Accept message from Telegram
+      parameters:
+        -
+          name: notify_key
+          in: path
+          type: string
+          required: true
+          description: Notify key
+        -
+          name: data
+          in: body
+          required: true
+          description: Data
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: object
+                required:
+                  - text
+                  - chat
+                properties:
+                  text:
+                    type: string
+                  chat:
+                    type: object
+                    required:
+                      - id
+                    properties:
+                      id:
+                        type: integer
+      responses:
+        200:
+          description: Response
+          schema:
+            type: object

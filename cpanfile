@@ -1,0 +1,10 @@
+requires 'AnyEvent';
+requires 'App::Environ::Config';
+requires 'App::Environ::Mojo::Pg';
+requires 'App::Environ';
+requires 'Class::XSAccessor';
+requires 'EV';
+requires 'Mojolicious::Plugin::OpenAPI';
+requires 'Mojolicious::Plugin::SetUserGroup';
+requires 'Mojolicious';
+requires 'Test::Compile';
