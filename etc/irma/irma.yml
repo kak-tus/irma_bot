@@ -15,6 +15,7 @@ irma:
   api: '${data_dir}/irma/api.yml'
 
   telegram:
+    bot_name: irma_bot
     notify_url: 'https://example.com'
     notify_keys:
       production: some_key
@@ -22,3 +23,17 @@ irma:
     api_keys:
       production: some_key
       development: some_key
+
+    texts:
+      usage: |
+        To enable AntiSpam protection to your group:
+
+        1. Add this bot to group.
+        2. Grant administrator permissions to bot (this allow bot kick spammers).
+        3. Send message in group in same format:
+
+        @irma_bot
+        Some greeting message to new user.
+        May be multiline.
+        Question 1?+Correct answer 1;-Incorrect answer 1;-Incorrect answer 2
+        Question 1?+Correct answer 1;+Correct answer 2;-Incorrect answer 1

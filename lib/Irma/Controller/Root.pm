@@ -7,6 +7,8 @@ use utf8;
 
 use Mojo::Base 'Mojolicious::Controller';
 
+use Mojo::JSON qw(to_json);
+
 sub message {
   my $self = shift->openapi->valid_input or return;
 
@@ -14,15 +16,19 @@ sub message {
 
   $self->render_later;
 
-  $self->telegram->message(
-    data => $v->param('data'),
-    sub { $self->_message_res(@_) }
+  my $data = $v->param('data');
+
+  $self->app->log->debug( 'Message: ' . to_json($data) );
+
+  $self->telegram->process(
+    data => $data,
+    sub { $self->_process_res(@_) }
   );
 
   return;
 }
 
-sub _message_res {
+sub _process_res {
   my $self = shift;
   my ( $msg, $err ) = @_;
 
@@ -35,4 +41,5 @@ sub _message_res {
 
   return;
 }
+
 1;

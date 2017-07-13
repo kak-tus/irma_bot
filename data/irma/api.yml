@@ -25,13 +25,10 @@ paths:
           description: Data
           schema:
             type: object
-            required:
-              - message
             properties:
               message:
                 type: object
                 required:
-                  - text
                   - chat
                 properties:
                   text:
@@ -43,6 +40,25 @@ paths:
                     properties:
                       id:
                         type: integer
+              callback_query:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: object
+                    required:
+                      - chat
+                    properties:
+                      text:
+                        type: string
+                      chat:
+                        type: object
+                        required:
+                          - id
+                        properties:
+                          id:
+                            type: integer
       responses:
         200:
           description: Response
