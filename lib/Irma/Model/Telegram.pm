@@ -102,6 +102,8 @@ sub _request {
 
   my $ua = Mojo::UserAgent->new;
 
+  $self->logger->debug( 'Request: ' . $JSON->encode($form) );
+
   $ua->post(
     $uri,
     form => $form,
@@ -121,7 +123,7 @@ sub _request_results {
   $self->logger->debug( 'Response: ' . $tx->res->body );
 
   if ( $tx->error ) {
-    $self->logger->error( 'Request fail ', $tx->error->{message} );
+    $self->logger->error( 'Request fail: ' . $JSON->encode( $tx->error ) );
     $cb->( undef, 'Request fail' );
     return;
   }
@@ -192,6 +194,7 @@ sub _callback_query_group {
   }
 
   unless ($group) {
+    $self->logger->debug('Group not found');
     $cb->( {} );
     return;
   }
@@ -206,6 +209,7 @@ sub _callback_query_group {
   my $type    = $msg->{chat}{type};
 
   if ($correct) {
+    $self->logger->debug('Correct answer');
     undef $KICK_POOL{$chat_id}->{$user_id};
   }
   else {
@@ -236,6 +240,8 @@ sub _message {
   my $user_id = $msg->{from}{id};
 
   if ( $KICK_POOL{$chat_id}->{$user_id} ) {
+    $self->logger->debug('User found in kick pool');
+
     $cb->();
 
     $self->_kick_user(
@@ -307,6 +313,7 @@ sub _new_members_ask {
   }
 
   unless ($group) {
+    $self->logger->debug('Group not found');
     $cb->( {} );
     return;
   }
@@ -398,6 +405,7 @@ sub _message_to_bot {
 
   my $mention = substr( $msg->{text}, 0, length($bot_name) );
   unless ( $mention eq $bot_name ) {
+    $self->logger->debug('Mention not found');
     $cb->( {} );
     return;
   }
@@ -439,6 +447,7 @@ sub _message_to_bot_permissions {
   }
 
   unless ($found_admin) {
+    $self->logger->debug('Not admin');
     $cb->( {} );
     return;
   }
@@ -516,6 +525,7 @@ sub _message_to_bot_permissions {
     && length($greeting) < $self->config->{limits}{greeting}
     && scalar(@questions) )
   {
+    $self->logger->debug('Greeting not found');
     my $resp = $self->get_message(
       chat_id => $chat_id,
       text    => $self->config->{texts}{fail},

@@ -82,7 +82,7 @@ sub read_group {
     WHERE id = ?;
   };
 
-  $self->pg->db->query(
+  $self->_query(
     $sql,
     $params{id},
     sub {
@@ -134,7 +134,7 @@ sub create_group {
 
   my $questions = $JSON->encode( $params{questions} );
 
-  $self->pg->db->query(
+  $self->_query(
     $sql,
     $params{id},
     $params{greeting},
@@ -158,6 +158,34 @@ sub _create_group_res {
   }
 
   $cb->();
+
+  return;
+}
+
+sub _query {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+
+  $self->pg->db->query(
+    @_,
+    sub {
+      $self->_query_res( @_, $cb );
+    }
+  );
+
+  return;
+}
+
+sub _query_res {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+  my ( $db, $err, $res ) = @_;
+
+  if ($err) {
+    $self->logger->error($err);
+  }
+
+  $cb->( $db, $err, $res );
 
   return;
 }

@@ -1,2 +1,6 @@
-2017-07-__ 0.1
+2017-07-15 0.2
+  - Better logging.
+  - Unified prod and dev environment.
+
+2017-07-15 0.1
   - First release.

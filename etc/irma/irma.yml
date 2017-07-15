@@ -32,7 +32,7 @@ irma:
         2. Grant administrator permissions to bot (this allow bot kick spammers).
         3. Send message in group, format it like this:
 
-        @irma_bot
+        @${..bot_name}
         Hello. This group has AntiSpam protection.
         You must get correct answer to next question in one minute or you will be kicked.
         In case of incorrect answer you can try join group after one day.

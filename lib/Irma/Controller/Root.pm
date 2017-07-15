@@ -18,7 +18,7 @@ sub message {
 
   my $data = $v->param('data');
 
-  $self->app->log->debug( 'Message: ' . to_json($data) );
+  $self->logger->debug( 'Message: ' . to_json($data) );
 
   $self->telegram->process(
     data => $data,
