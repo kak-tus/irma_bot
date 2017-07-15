@@ -40,8 +40,6 @@ irma:
         Question 1?+Correct answer 1;Incorrect answer 1;Incorrect answer 2
         Question 2?+Correct answer 1;+Correct answer 2;Incorrect answer 1
 
-        Now it support only usual groups, not supergroups.
-
         https://github.com/kak-tus/irma_bot
       set: AntiSpam protection enabled
       fail: |
