@@ -22,18 +22,18 @@ sub message {
 
   $self->telegram->process(
     data => $data,
-    sub { $self->_process_res(@_) }
+    sub { $self->_message_res(@_) }
   );
 
   return;
 }
 
-sub _process_res {
+sub _message_res {
   my $self = shift;
   my ( $msg, $err ) = @_;
 
   if ($err) {
-    $self->render( openapi => {}, status => 500 );
+    $self->render( json => {}, status => 500 );
     return;
   }
 

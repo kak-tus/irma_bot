@@ -9,3 +9,4 @@ requires 'Mojolicious::Plugin::OpenAPI';
 requires 'Mojolicious::Plugin::SetUserGroup';
 requires 'Mojolicious';
 requires 'Test::Compile';
+requires 'Text::Trim';
