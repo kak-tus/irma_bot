@@ -1,6 +1,6 @@
 ---
 hypnotoad:
-  listen: [ 'http://0.0.0.0:9000' ]
+  listen: [ 'http://0.0.0.0:3000' ]
   workers: 1
   proxy: 1
   pid_file: /var/run/irma/hypnotoad.pid
@@ -17,12 +17,8 @@ irma:
   telegram:
     bot_name: irma_bot
     notify_url: 'https://example.com'
-    notify_keys:
-      production: some_key
-      development: some_key
-    api_keys:
-      production: some_key
-      development: some_key
+    notify_key: some_key
+    api_key: some_key
     limits:
       greeting: 1000
       question: 100

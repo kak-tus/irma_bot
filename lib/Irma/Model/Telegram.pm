@@ -36,8 +36,6 @@ use Class::XSAccessor { accessors => [ keys %{ $VALIDATION{new} } ] };
 
 my $INSTANCE;
 
-our $MODE = 'production';
-
 my $JSON = Cpanel::JSON::XS->new;
 
 my %KICK_POOL;
@@ -53,11 +51,9 @@ sub instance {
 
   unless ($INSTANCE) {
     my $config  = App::Environ::Config->instance->{irma};
-    my $api_key = $config->{telegram}{api_keys}{$MODE};
+    my $api_key = $config->{telegram}{api_key};
     my $logger  = Mojo::Log->new;
     my $db      = Irma::Model::DB->instance;
-
-    $logger->debug("Start in $MODE mode");
 
     $INSTANCE = $class->new(
       config  => $config->{telegram},

@@ -12,6 +12,7 @@ use Mojo::Base 'Mojolicious';
 use App::Environ;
 use App::Environ::Config;
 use Irma::Model::Telegram;
+use Mojo::Log;
 
 my $LOADED;
 
@@ -93,7 +94,14 @@ sub _init_routes {
 sub _init_models {
   my $self = shift;
 
-  $Irma::Model::Telegram::MODE = $self->mode;
+  my $logger = Mojo::Log->new;
+  $self->log($logger);
+
+  $self->helper(
+    logger => sub {
+      return $logger;
+    }
+  );
 
   $self->helper(
     telegram => sub {
@@ -111,8 +119,7 @@ sub _init_telegram {
     sub {
       return unless $LOADED;
 
-      my $notify_key
-          = $self->config->{irma}{telegram}{notify_keys}{ $self->mode };
+      my $notify_key = $self->config->{irma}{telegram}{notify_key};
 
       my $url
           = $self->config->{irma}{telegram}{notify_url}
