@@ -1,0 +1,57 @@
+---
+hypnotoad:
+  listen: [ 'http://0.0.0.0:9000' ]
+  workers: 1
+  proxy: 1
+  pid_file: /var/run/irma/hypnotoad.pid
+
+irma:
+  user: www-data
+  group: www-data
+
+  secrets:
+    - some_secret
+
+  api: '${data_dir}/irma/api.yml'
+
+  telegram:
+    bot_name: irma_bot
+    notify_url: 'https://example.com'
+    notify_keys:
+      production: some_key
+      development: some_key
+    api_keys:
+      production: some_key
+      development: some_key
+    limits:
+      greeting: 1000
+      question: 100
+      answer: 50
+
+    texts:
+      usage: |
+        To enable AntiSpam protection of your group:
+
+        1. Add this bot to group.
+        2. Grant administrator permissions to bot (this allow bot kick spammers).
+        3. Send message in group, format it like this:
+
+        @irma_bot
+        Hello. This group has AntiSpam protection.
+        You must get correct answer to next question in one minute or you will be kicked.
+        In case of incorrect answer you can try join group after one day.
+
+        Question 1?+Correct answer 1;Incorrect answer 1;Incorrect answer 2
+        Question 2?+Correct answer 1;+Correct answer 2;Incorrect answer 1
+
+        Now it support only usual groups, not supergroups.
+
+        https://github.com/kak-tus/irma_bot
+      set: AntiSpam protection enabled
+      fail: |
+        Can't parse your message.
+
+        Must be set greeting, at least one question and at least one correct answer.
+
+        Greeting, questions and answers has length limit.
+        Greeting - ${..limits.greeting} characters, question - ${..limits.question}, answer - ${..limits.answer}.

@@ -1,0 +1,6 @@
+---
+pg:
+  connectors:
+    main:
+      migrations:
+        file: '${data_dir}/irma/migrations.sql'

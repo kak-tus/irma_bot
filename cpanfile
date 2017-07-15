@@ -1,0 +1,12 @@
+requires 'AnyEvent';
+requires 'App::Environ::Config';
+requires 'App::Environ::Mojo::Pg';
+requires 'App::Environ';
+requires 'Class::XSAccessor';
+requires 'Cpanel::JSON::XS';
+requires 'EV';
+requires 'Mojolicious::Plugin::OpenAPI';
+requires 'Mojolicious::Plugin::SetUserGroup';
+requires 'Mojolicious';
+requires 'Test::Compile';
+requires 'Text::Trim';
