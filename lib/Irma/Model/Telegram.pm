@@ -251,7 +251,7 @@ sub _message {
       sub { }
     );
 
-    my %form = ( chat_id => $chat_id, message_id => $msg->{update_id} );
+    my %form = ( chat_id => $chat_id, message_id => $msg->{message_id} );
     $self->_request( 'deleteMessage', \%form, sub { } );
 
     return;
