@@ -1,3 +1,4 @@
+requires 'AnyEvent::RipeRedis';
 requires 'AnyEvent';
 requires 'App::Environ::Config';
 requires 'App::Environ::Mojo::Pg';

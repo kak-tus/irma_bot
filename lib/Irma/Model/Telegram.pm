@@ -10,6 +10,7 @@ use App::Environ::Config;
 use Carp qw(croak);
 use Cpanel::JSON::XS;
 use Irma::Model::DB;
+use Irma::Model::Storage;
 use Mojo::Log;
 use Mojo::UserAgent;
 use Params::Validate qw( validate validate_pos );
@@ -24,6 +25,7 @@ BEGIN {
       api_key => 1,
       logger  => 1,
       db      => 1,
+      storage => 1,
     },
     process     => { data    => 1 },
     get_message => { chat_id => 1, text => 1, buttons => 0 },
@@ -37,8 +39,6 @@ use Class::XSAccessor { accessors => [ keys %{ $VALIDATION{new} } ] };
 my $INSTANCE;
 
 my $JSON = Cpanel::JSON::XS->new;
-
-my %KICK_POOL;
 
 App::Environ::Config->register(
   qw(
@@ -54,12 +54,14 @@ sub instance {
     my $api_key = $config->{telegram}{api_key};
     my $logger  = Mojo::Log->new;
     my $db      = Irma::Model::DB->instance;
+    my $storage = Irma::Model::Storage->instance;
 
     $INSTANCE = $class->new(
       config  => $config->{telegram},
       api_key => $api_key,
       logger  => $logger,
       db      => $db,
+      storage => $storage,
     );
   }
 
@@ -210,11 +212,15 @@ sub _callback_query_group {
 
   if ($correct) {
     $self->logger->debug('Correct answer');
-    undef $KICK_POOL{$chat_id}->{$user_id};
+    $self->storage->delete_kick(
+      chat_id => $chat_id,
+      user_id => $user_id,
+      sub { }
+    );
   }
   else {
     $self->_kick_user(
-      id      => $user_id,
+      user_id => $user_id,
       chat_id => $chat_id,
       type    => $type,
       sub { }
@@ -239,13 +245,37 @@ sub _message {
   my $chat_id = $msg->{chat}{id};
   my $user_id = $msg->{from}{id};
 
-  if ( $KICK_POOL{$chat_id}->{$user_id} ) {
+  $self->storage->read_kick(
+    chat_id => $chat_id,
+    user_id => $user_id,
+    sub { $self->_message_res( \%params, @_, $cb ) }
+  );
+
+  return;
+}
+
+sub _message_res {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+  my ( $params, $res, $err ) = @_;
+
+  if ($err) {
+    $cb->( undef, $err );
+    return;
+  }
+
+  my $msg     = $params->{data}->{message};
+  my $type    = $msg->{chat}{type};
+  my $chat_id = $msg->{chat}{id};
+  my $user_id = $msg->{from}{id};
+
+  if ($res) {
     $self->logger->debug('User found in kick pool');
 
-    $cb->();
+    $cb->( {} );
 
     $self->_kick_user(
-      id      => $user_id,
+      user_id => $user_id,
       chat_id => $chat_id,
       type    => $type,
       sub { }
@@ -260,11 +290,11 @@ sub _message {
   if ( ( $type eq 'group' || $type eq 'supergroup' )
     && $msg->{new_chat_members} )
   {
-    $self->_new_members( \%params, $cb );
+    $self->_new_members( $params, $cb );
   }
   elsif ( ( $type eq 'group' || $type eq 'supergroup' ) && $msg->{entities} )
   {
-    $self->_message_to_bot( \%params, $cb );
+    $self->_message_to_bot( $params, $cb );
   }
   elsif ( $type eq 'private' ) {
     my $resp = $self->get_message(
@@ -354,14 +384,17 @@ sub _new_members_ask {
     my $method = delete $resp->{method};
     $self->_request( $method, $resp, sub { } );
 
-    $KICK_POOL{$chat_id}->{ $user->{id} } = 1;
+    $self->storage->create_kick(
+      chat_id => $chat_id,
+      user_id => $user->{id},
+      sub { }
+    );
 
-    ## TODO replace with minion, it's temporary solution
     my $timer;
     $timer = AE::timer 60, 0, sub {
       undef $timer;
       $self->_kick_user(
-        id      => $user->{id},
+        user_id => $user->{id},
         chat_id => $chat_id,
         type    => $type,
         sub { }
@@ -377,20 +410,52 @@ sub _kick_user {
   my $cb               = pop;
   my %params           = @_;
 
-  return unless $KICK_POOL{ $params{chat_id} }->{ $params{id} };
-  undef $KICK_POOL{ $params{chat_id} }->{ $params{id} };
-
-  my %form = (
-    user_id => $params{id},
+  $self->storage->read_kick(
     chat_id => $params{chat_id},
+    user_id => $params{user_id},
+    sub { $self->_kick_user_res( \%params, @_, $cb ) }
   );
 
-  if ( $params{type} eq 'group' ) {
-    my $until_date = time + 3600;
-    $form{until_date} = $until_date;
+  return;
+}
+
+sub _kick_user_res {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+  my ( $params, $res, $err ) = @_;
+
+  if ($err) {
+    $cb->( undef, $err );
+    return;
   }
 
-  $self->_request( 'kickChatMember', \%form, $cb );
+  unless ($res) {
+    $cb->();
+    return;
+  }
+
+  my $res_cb = sub {
+    state $cnt = 2;
+    $cnt--;
+    return if $cnt > 0;
+    $cb->();
+  };
+
+  my $until_date = time + 86400;
+
+  my %form = (
+    user_id    => $params->{user_id},
+    chat_id    => $params->{chat_id},
+    until_date => $until_date,
+  );
+
+  $self->_request( 'kickChatMember', \%form, $res_cb );
+
+  $self->storage->delete_kick(
+    chat_id => $params->{chat_id},
+    user_id => $params->{user_id},
+    $res_cb
+  );
 
   return;
 }
@@ -549,20 +614,20 @@ sub _message_to_bot_permissions {
 sub _message_to_bot_set {
   my __PACKAGE__ $self = shift;
   my $cb = pop;
-  my ( $params, $resp, $err ) = @_;
+  my ( $params, $res, $err ) = @_;
 
   if ($err) {
     $cb->( undef, $err );
     return;
   }
 
-  my $msg      = $params->{data}{message};
-  my $chat_id  = $msg->{chat}{id};
-  my $set_resp = $self->get_message(
+  my $msg     = $params->{data}{message};
+  my $chat_id = $msg->{chat}{id};
+  my $resp    = $self->get_message(
     chat_id => $chat_id,
     text    => $self->config->{texts}{set},
   );
-  $cb->($set_resp);
+  $cb->($resp);
 
   return;
 }
