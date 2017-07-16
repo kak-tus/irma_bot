@@ -1,3 +1,8 @@
+2017-07-16 0.3
+  - Delete spammer message fix.
+  - Tested in supergroup, works fine.
+  - Multiprocess execution support.
+
 2017-07-15 0.2
   - Better logging.
   - Unified prod and dev environment.
