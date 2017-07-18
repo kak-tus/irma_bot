@@ -19,7 +19,7 @@ BEGIN {
       logger => 1,
       redis  => 1,
     },
-    kick => { user_id => 1, chat_id => 1 },
+    create => { key => 1, vals => 1, ttl => 0 },
   );
 }
 
@@ -65,27 +65,30 @@ sub new {
   return $self;
 }
 
-sub create_kick {
+sub create {
   my __PACKAGE__ $self = shift;
 
   my $cb = pop;
   croak 'No cb' unless $cb;
 
-  my %params = validate( @_, $VALIDATION{kick} );
+  my %params = validate( @_, $VALIDATION{create} );
 
-  my $key = "irma_kick_$params{chat_id}_$params{user_id}";
+  my $key = _key( $params{key}, $params{vals} );
+  $params{ttl} //= 600;
 
   $self->redis->setex(
-    $key, 600, 1,
+    $key,
+    $params{ttl},
+    1,
     sub {
-      $self->_kick_res( @_, $cb );
+      $self->_res( @_, $cb );
     }
   );
 
   return;
 }
 
-sub _kick_res {
+sub _res {
   my __PACKAGE__ $self = shift;
   my $cb = pop;
   my ( $res, $err ) = @_;
@@ -101,44 +104,50 @@ sub _kick_res {
   return;
 }
 
-sub read_kick {
+sub read {
   my __PACKAGE__ $self = shift;
 
   my $cb = pop;
   croak 'No cb' unless $cb;
 
-  my %params = validate( @_, $VALIDATION{kick} );
+  my %params = validate( @_, $VALIDATION{create} );
 
-  my $key = "irma_kick_$params{chat_id}_$params{user_id}";
+  my $key = _key( $params{key}, $params{vals} );
 
   $self->redis->exists(
     $key,
     sub {
-      $self->_kick_res( @_, $cb );
+      $self->_res( @_, $cb );
     }
   );
 
   return;
 }
 
-sub delete_kick {
+sub delete {
   my __PACKAGE__ $self = shift;
 
   my $cb = pop;
   croak 'No cb' unless $cb;
 
-  my %params = validate( @_, $VALIDATION{kick} );
+  my %params = validate( @_, $VALIDATION{create} );
 
-  my $key = "irma_kick_$params{chat_id}_$params{user_id}";
+  my $key = _key( $params{key}, $params{vals} );
 
   $self->redis->del(
     $key,
     sub {
-      $self->_kick_res( @_, $cb );
+      $self->_res( @_, $cb );
     }
   );
 
   return;
+}
+
+sub _key {
+  my ( $key, $vals ) = @_;
+  return "irma_${key}_"
+      . join( '_', map { $_ . '_' . $vals->{$_} } sort keys %$vals );
 }
 
 1;

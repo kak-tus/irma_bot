@@ -14,14 +14,23 @@ use Params::Validate qw(validate);
 
 my %VALIDATION;
 
+my @GROUP_FIELDS;
+
 BEGIN {
+  @GROUP_FIELDS = qw(
+      greeting
+      questions
+      ban_url
+      ban_question
+  );
+
   %VALIDATION = (
     new => {
       logger => 1,
       pg     => 1,
     },
     read_group   => { id => 1, },
-    create_group => { id => 1, greeting => 1, questions => 1 },
+    create_group => { id => 1, ( map { ( $_ => 0 ) } @GROUP_FIELDS ) },
   );
 }
 
@@ -77,7 +86,7 @@ sub read_group {
   my %params = validate( @_, $VALIDATION{read_group} );
 
   my $sql = q{
-    SELECT greeting, questions
+    SELECT greeting, questions, ban_url, ban_question
     FROM groups
     WHERE id = ?;
   };
@@ -109,7 +118,10 @@ sub _read_group_res {
   }
 
   my $group = $res->hash;
-  $group->{questions} = $JSON->decode( $group->{questions} );
+
+  if ( $group->{questions} ) {
+    $group->{questions} = $JSON->decode( $group->{questions} );
+  }
 
   $cb->($group);
 
@@ -124,21 +136,40 @@ sub create_group {
 
   my %params = validate( @_, $VALIDATION{create_group} );
 
-  my $sql = q{
-    INSERT INTO groups
-    ( id, greeting, questions ) VALUES ( ?, ?, ? )
-    ON CONFLICT (id) DO UPDATE SET
-      greeting = EXCLUDED.greeting,
-      questions = EXCLUDED.questions;
-  };
+  my @args;
+  my @vals;
 
-  my $questions = $JSON->encode( $params{questions} );
+  foreach my $field (@GROUP_FIELDS) {
+    next unless exists $params{$field};
+
+    if ( $field eq 'questions' ) {
+      $params{$field} = $JSON->encode( $params{questions} );
+    }
+
+    push @args, $params{$field};
+    push @vals, $field;
+  }
+
+  unless ( scalar @vals ) {
+    $cb->();
+    return;
+  }
+
+  my $vals_str = join ',', @vals;
+  my $marks_str = join ',', ('?') x scalar(@vals);
+  my $conflict_str = join ',', map {"EXCLUDED.$_"} @vals;
+
+  my $sql = qq{
+    INSERT INTO groups
+    ( id, $vals_str ) VALUES ( ?, $marks_str )
+    ON CONFLICT (id) DO UPDATE SET
+      ($vals_str) = ($conflict_str)
+  };
 
   $self->_query(
     $sql,
     $params{id},
-    $params{greeting},
-    $questions,
+    @args,
     sub {
       $self->_create_group_res( @_, $cb );
     }

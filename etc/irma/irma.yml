@@ -30,7 +30,18 @@ irma:
 
         1. Add this bot to group.
         2. Grant administrator permissions to bot (this allow bot kick spammers).
-        3. Send message in group, format it like this:
+
+        By default bot uses URL protection: if newbie user send URL or forward message - bot kicks user.
+        You can disable or enable this protection by sending to bot:
+
+        @${..bot_name} ban_url
+
+        or
+
+        @${..bot_name} no_ban_url
+
+        Additionaly, you can add questions protection
+        Send message in group, format it like this:
 
         @${..bot_name}
         Hello. This group has AntiSpam protection.
@@ -39,6 +50,14 @@ irma:
 
         Question 1?+Correct answer 1;Incorrect answer 1;Incorrect answer 2
         Question 2?+Correct answer 1;+Correct answer 2;Incorrect answer 1
+
+        Disable or enable this by
+
+        @${..bot_name} ban_question
+
+        or
+
+        @${..bot_name} no_ban_question
 
         https://github.com/kak-tus/irma_bot
       set: AntiSpam protection enabled
@@ -49,3 +68,28 @@ irma:
 
         Greeting, questions and answers has length limit.
         Greeting - ${..limits.greeting} characters, question - ${..limits.question}, answer - ${..limits.answer}.
+      commands:
+        ban_url:
+          text: |
+            URLs protection enabled
+            Send me "no_ban_url" to disable
+          field: ban_url
+          value: 1
+        no_ban_url:
+          text: |
+            URLs protection disabled
+            Send me "ban_url" to enable
+          field: ban_url
+          value: 0
+        ban_question:
+          text: |
+            Questions protection enabled
+            Send me "no_ban_question" to disable
+          field: ban_question
+          value: 1
+        no_ban_question:
+          text: |
+            Questions protection disabled
+            Send me "ban_question" to enable
+          field: ban_question
+          value: 0

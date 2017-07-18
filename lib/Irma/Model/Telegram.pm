@@ -212,9 +212,12 @@ sub _callback_query_group {
 
   if ($correct) {
     $self->logger->debug('Correct answer');
-    $self->storage->delete_kick(
-      chat_id => $chat_id,
-      user_id => $user_id,
+    $self->storage->delete(
+      key  => 'kick',
+      vals => {
+        chat_id => $chat_id,
+        user_id => $user_id,
+      },
       sub { }
     );
   }
@@ -241,20 +244,22 @@ sub _message {
   my %params = @_;
 
   my $msg     = $params{data}->{message};
-  my $type    = $msg->{chat}{type};
   my $chat_id = $msg->{chat}{id};
   my $user_id = $msg->{from}{id};
 
-  $self->storage->read_kick(
-    chat_id => $chat_id,
-    user_id => $user_id,
-    sub { $self->_message_res( \%params, @_, $cb ) }
+  $self->storage->read(
+    key  => 'kick',
+    vals => {
+      chat_id => $chat_id,
+      user_id => $user_id,
+    },
+    sub { $self->_message_kick_res( \%params, @_, $cb ) }
   );
 
   return;
 }
 
-sub _message_res {
+sub _message_kick_res {
   my __PACKAGE__ $self = shift;
   my $cb = pop;
   my ( $params, $res, $err ) = @_;
@@ -287,14 +292,50 @@ sub _message_res {
     return;
   }
 
+  $self->storage->read(
+    key  => 'newbie',
+    vals => {
+      chat_id => $chat_id,
+      user_id => $user_id,
+    },
+    sub { $self->_message_newbie_res( $params, @_, $cb ) }
+  );
+
+  return;
+}
+
+sub _message_newbie_res {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+  my ( $params, $res, $err ) = @_;
+
+  if ($err) {
+    $cb->( undef, $err );
+    return;
+  }
+
+  my $msg     = $params->{data}->{message};
+  my $type    = $msg->{chat}{type};
+  my $chat_id = $msg->{chat}{id};
+  my $user_id = $msg->{from}{id};
+
+  my %entities = $self->_search_entities($msg);
+
+  if ($res) {
+    $self->logger->debug('Newbie found');
+    $self->_message_from_newbie( $params, \%entities, $cb );
+    return;
+  }
+
   if ( ( $type eq 'group' || $type eq 'supergroup' )
     && $msg->{new_chat_members} )
   {
     $self->_new_members( $params, $cb );
   }
-  elsif ( ( $type eq 'group' || $type eq 'supergroup' ) && $msg->{entities} )
+  elsif ( ( $type eq 'group' || $type eq 'supergroup' )
+    && $entities{_bot_name} )
   {
-    $self->_message_to_bot( $params, $cb );
+    $self->_message_to_bot( $params, \%entities, $cb );
   }
   elsif ( $type eq 'private' ) {
     my $resp = $self->get_message(
@@ -305,6 +346,47 @@ sub _message_res {
   }
   else {
     $cb->( {} );
+  }
+
+  return;
+}
+
+sub _message_from_newbie {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+  my ( $params, $entities ) = @_;
+
+  my $msg     = $params->{data}->{message};
+  my $chat_id = $msg->{chat}{id};
+  my $user_id = $msg->{from}{id};
+  my $type    = $msg->{chat}{type};
+
+  if ( $entities->{url} || $msg->{forward_from} ) {
+    $self->logger->debug('URL found');
+
+    $cb->( {} );
+
+    $self->_kick_user(
+      user_id => $user_id,
+      chat_id => $chat_id,
+      type    => $type,
+      sub { }
+    );
+
+    my %form = ( chat_id => $chat_id, message_id => $msg->{message_id} );
+    $self->_request( 'deleteMessage', \%form, sub { } );
+  }
+  else {
+    $self->storage->delete(
+      key  => 'newbie',
+      vals => {
+        chat_id => $chat_id,
+        user_id => $user_id,
+      },
+      sub {
+        $cb->( {} );
+      }
+    );
   }
 
   return;
@@ -325,14 +407,14 @@ sub _new_members {
   $self->db->read_group(
     id => $msg->{chat}{id},
     sub {
-      $self->_new_members_ask( $params, @_, $cb );
+      $self->_new_members_res( $params, @_, $cb );
     }
   );
 
   return;
 }
 
-sub _new_members_ask {
+sub _new_members_res {
   my __PACKAGE__ $self = shift;
   my $cb = pop;
   my ( $params, $group, $err ) = @_;
@@ -348,7 +430,68 @@ sub _new_members_ask {
     return;
   }
 
-  $cb->( {} );
+  my $res_cb = sub {
+    state $cnt= 2;
+    $cnt--;
+    return if $cnt > 0;
+    $cb->( {} );
+  };
+
+  if ( $group->{ban_url} ) {
+    $self->logger->debug('URL protection');
+    $self->_new_members_url( $params, $group, $res_cb );
+  }
+  else {
+    $res_cb->();
+  }
+
+  if ( $group->{ban_question} ) {
+    $self->logger->debug('Question protection');
+    $self->_new_members_question( $params, $group, $res_cb );
+  }
+  else {
+    $res_cb->();
+  }
+
+  return;
+}
+
+sub _new_members_url {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+  my ( $params, $group ) = @_;
+
+  my $msg     = $params->{data}{message};
+  my $chat_id = $msg->{chat}{id};
+
+  my $res_cb = sub {
+    state $cnt = scalar @{ $msg->{new_chat_members} };
+    $cnt--;
+    return if $cnt > 0;
+    $cb->();
+  };
+
+  foreach my $user ( @{ $msg->{new_chat_members} } ) {
+    $self->storage->create(
+      key  => 'newbie',
+      ttl  => 86400 * 7,
+      vals => {
+        chat_id => $chat_id,
+        user_id => $user->{id},
+      },
+      $res_cb
+    );
+  }
+
+  return;
+}
+
+sub _new_members_question {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+  my ( $params, $group ) = @_;
+
+  $cb->();
 
   my $msg     = $params->{data}{message};
   my $chat_id = $msg->{chat}{id};
@@ -384,9 +527,13 @@ sub _new_members_ask {
     my $method = delete $resp->{method};
     $self->_request( $method, $resp, sub { } );
 
-    $self->storage->create_kick(
-      chat_id => $chat_id,
-      user_id => $user->{id},
+    $self->storage->create(
+      key  => 'kick',
+      ttl  => 600,
+      vals => {
+        chat_id => $chat_id,
+        user_id => $user->{id},
+      },
       sub { }
     );
 
@@ -410,9 +557,12 @@ sub _kick_user {
   my $cb               = pop;
   my %params           = @_;
 
-  $self->storage->read_kick(
-    chat_id => $params{chat_id},
-    user_id => $params{user_id},
+  $self->storage->read(
+    key  => 'kick',
+    vals => {
+      chat_id => $params{chat_id},
+      user_id => $params{user_id},
+    },
     sub { $self->_kick_user_res( \%params, @_, $cb ) }
   );
 
@@ -441,19 +591,19 @@ sub _kick_user_res {
     $cb->();
   };
 
-  my $until_date = time + 86400;
-
   my %form = (
-    user_id    => $params->{user_id},
-    chat_id    => $params->{chat_id},
-    until_date => $until_date,
+    user_id => $params->{user_id},
+    chat_id => $params->{chat_id},
   );
 
   $self->_request( 'kickChatMember', \%form, $res_cb );
 
-  $self->storage->delete_kick(
-    chat_id => $params->{chat_id},
-    user_id => $params->{user_id},
+  $self->storage->delete(
+    key  => 'kick',
+    vals => {
+      chat_id => $params->{chat_id},
+      user_id => $params->{user_id},
+    },
     $res_cb
   );
 
@@ -462,25 +612,17 @@ sub _kick_user_res {
 
 sub _message_to_bot {
   my __PACKAGE__ $self = shift;
-  my $cb               = pop;
-  my $params           = shift;
+  my $cb = pop;
+  my ( $params, $entities ) = @_;
 
-  my $msg      = $params->{data}{message};
-  my $bot_name = '@' . $self->config->{bot_name};
-
-  my $mention = substr( $msg->{text}, 0, length($bot_name) );
-  unless ( $mention eq $bot_name ) {
-    $self->logger->debug('Mention not found');
-    $cb->( {} );
-    return;
-  }
-
+  my $msg     = $params->{data}{message};
   my $chat_id = $msg->{chat}{id};
+
   $self->_request(
     'getChatAdministrators',
     { chat_id => $chat_id },
     sub {
-      $self->_message_to_bot_permissions( $params, @_, $cb );
+      $self->_message_to_bot_permissions( $params, $entities, @_, $cb );
     }
   );
 
@@ -490,7 +632,7 @@ sub _message_to_bot {
 sub _message_to_bot_permissions {
   my __PACKAGE__ $self = shift;
   my $cb = pop;
-  my ( $params, $res, $err ) = @_;
+  my ( $params, $entities, $res, $err ) = @_;
 
   if ($err) {
     $cb->( undef, $err );
@@ -517,7 +659,73 @@ sub _message_to_bot_permissions {
     return;
   }
 
+  if ( $entities->{_bot_command} ) {
+    $self->_message_to_bot_command( $params, $entities, $cb );
+  }
+  else {
+    $self->_message_to_bot_questions( $params, $entities, $cb );
+  }
+
+  return;
+}
+
+sub _message_to_bot_command {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+  my ( $params, $entities ) = @_;
+
+  my $cmd = $entities->{_bot_command};
+  my $val = $self->config->{texts}{commands}{$cmd};
+
+  unless ($val) {
+    $cb->( {} );
+    return;
+  }
+
+  my $msg     = $params->{data}{message};
+  my $chat_id = $msg->{chat}{id};
+
+  $self->db->create_group(
+    id            => $chat_id,
+    $val->{field} => $val->{value},
+    sub {
+      $self->_message_to_bot_command_res( $params, $val, @_, $cb );
+    }
+  );
+
+  return;
+}
+
+sub _message_to_bot_command_res {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+  my ( $params, $val, $res, $err ) = @_;
+
+  if ($err) {
+    $cb->( undef, $err );
+    return;
+  }
+
+  my $msg     = $params->{data}{message};
+  my $chat_id = $msg->{chat}{id};
+
+  my $resp = $self->get_message(
+    chat_id => $chat_id,
+    text    => $val->{text},
+  );
+
+  $cb->($resp);
+
+  return;
+}
+
+sub _message_to_bot_questions {
+  my __PACKAGE__ $self = shift;
+  my $cb = pop;
+  my ( $params, $entities ) = @_;
+
   my $bot_name = '@' . $self->config->{bot_name};
+  my $msg      = $params->{data}{message};
 
   my $text
       = substr( $msg->{text}, length($bot_name) + 1, length( $msg->{text} ) );
@@ -600,9 +808,10 @@ sub _message_to_bot_permissions {
   }
 
   $self->db->create_group(
-    id        => $chat_id,
-    greeting  => $greeting,
-    questions => \@questions,
+    id           => $chat_id,
+    greeting     => $greeting,
+    questions    => \@questions,
+    ban_question => 1,
     sub {
       $self->_message_to_bot_set( $params, @_, $cb );
     }
@@ -655,6 +864,33 @@ sub get_message {
   }
 
   return \%response;
+}
+
+sub _search_entities {
+  my __PACKAGE__ $self = shift;
+  my $msg = shift;
+
+  my %entities;
+  return unless $msg->{entities};
+
+  my $bot_name = '@' . $self->config->{bot_name};
+
+  foreach my $entity ( @{ $msg->{entities} } ) {
+    $entity->{_value}
+        = substr( $msg->{text}, $entity->{offset}, $entity->{length} );
+    $entities{ $entity->{type} } = $entity;
+
+    if ( $bot_name eq $entity->{_value} ) {
+      $entities{_bot_name} = $entity;
+    }
+  }
+
+  foreach my $cmd ( keys %{ $self->config->{texts}{commands} } ) {
+    next if index( $msg->{text}, $cmd ) < 0;
+    $entities{_bot_command} = $cmd;
+  }
+
+  return %entities;
 }
 
 1;

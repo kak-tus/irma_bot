@@ -1,3 +1,6 @@
+2017-07-20 0.4
+  - Ban by URLs support.
+
 2017-07-16 0.3
   - Delete spammer message fix.
   - Tested in supergroup, works fine.
