@@ -1,3 +1,6 @@
+2017-07-23 0.5
+  - Fix detection messages, forwarded from chats.
+
 2017-07-19 0.4
   - Ban by URLs support.
 
