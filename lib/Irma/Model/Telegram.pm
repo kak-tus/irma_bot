@@ -592,9 +592,12 @@ sub _kick_user_res {
     $cb->();
   };
 
+  my $time = time + 86400;
+
   my %form = (
-    user_id => $params->{user_id},
-    chat_id => $params->{chat_id},
+    user_id    => $params->{user_id},
+    chat_id    => $params->{chat_id},
+    until_date => $time,
   );
 
   $self->_request( 'kickChatMember', \%form, $res_cb );
