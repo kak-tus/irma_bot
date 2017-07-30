@@ -545,6 +545,7 @@ sub _new_members_question {
         user_id => $user->{id},
         chat_id => $chat_id,
         type    => $type,
+        check   => 1,
         sub { }
       );
     };
@@ -557,6 +558,11 @@ sub _kick_user {
   my __PACKAGE__ $self = shift;
   my $cb               = pop;
   my %params           = @_;
+
+  unless ( $params{check} ) {
+    $self->_kick_user_res( \%params, 1, $cb );
+    return;
+  }
 
   $self->storage->read(
     key  => 'kick',
