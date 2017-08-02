@@ -361,7 +361,10 @@ sub _message_from_newbie {
   my $user_id = $msg->{from}{id};
   my $type    = $msg->{chat}{type};
 
-  if ( $entities->{url} || $msg->{forward_from} || $msg->{forward_from_chat} )
+  if ( $entities->{url}
+    || $msg->{forward_from}
+    || $msg->{forward_from_chat}
+    || $msg->{sticker} )
   {
     $self->logger->debug('Restricted message found');
 
