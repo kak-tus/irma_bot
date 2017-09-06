@@ -114,7 +114,7 @@ sub read {
 
   my $key = _key( $params{key}, $params{vals} );
 
-  $self->redis->exists(
+  $self->redis->get(
     $key,
     sub {
       $self->_res( @_, $cb );
@@ -148,6 +148,26 @@ sub _key {
   my ( $key, $vals ) = @_;
   return "irma_${key}_"
       . join( '_', map { $_ . '_' . $vals->{$_} } sort keys %$vals );
+}
+
+sub update {
+  my __PACKAGE__ $self = shift;
+
+  my $cb = pop;
+  croak 'No cb' unless $cb;
+
+  my %params = validate( @_, $VALIDATION{create} );
+
+  my $key = _key( $params{key}, $params{vals} );
+
+  $self->redis->incr(
+    $key,
+    sub {
+      $self->_res( @_, $cb );
+    }
+  );
+
+  return;
 }
 
 1;

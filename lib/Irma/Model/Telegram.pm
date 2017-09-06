@@ -321,8 +321,8 @@ sub _message_newbie_res {
 
   my %entities = $self->_search_entities($msg);
 
-  if ($res) {
-    $self->logger->debug('Newbie found');
+  if ( $res && $res <= 4 ) {
+    $self->logger->debug( 'Newbie found: ', $res );
     $self->_message_from_newbie( $params, \%entities, $cb );
     return;
   }
@@ -381,7 +381,7 @@ sub _message_from_newbie {
     $self->_request( 'deleteMessage', \%form, sub { } );
   }
   else {
-    $self->storage->delete(
+    $self->storage->update(
       key  => 'newbie',
       vals => {
         chat_id => $chat_id,
