@@ -6,6 +6,7 @@ requires 'App::Environ';
 requires 'Class::XSAccessor';
 requires 'Cpanel::JSON::XS';
 requires 'EV';
+requires 'IO::Socket::Socks';
 requires 'Mojolicious::Plugin::OpenAPI';
 requires 'Mojolicious::Plugin::SetUserGroup';
 requires 'Mojolicious';
