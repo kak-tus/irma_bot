@@ -104,6 +104,14 @@ sub _request {
 
   my $ua = Mojo::UserAgent->new;
 
+  if ( $self->config->{proxy}
+    && $self->config->{proxy}{enable}
+    && $self->config->{proxy}{address} )
+  {
+    $ua->proxy->http( $self->config->{proxy}{address} )
+        ->https( $self->config->{proxy}{address} );
+  }
+
   $self->logger->debug( 'Request: ' . $JSON->encode($form) );
 
   $ua->post(
