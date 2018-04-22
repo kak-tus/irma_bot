@@ -43,6 +43,7 @@ my $JSON = Cpanel::JSON::XS->new;
 App::Environ::Config->register(
   qw(
       irma/irma.yml
+      irma/conf.d/*.yml
       )
 );
 
