@@ -1,3 +1,6 @@
+2018-05-17 0.11
+  - Fix ban to links in text.
+
 2018-04-22 0.10
   - Restore send messages to Telegram.
 

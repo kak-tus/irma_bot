@@ -371,6 +371,7 @@ sub _message_from_newbie {
   my $type    = $msg->{chat}{type};
 
   if ( $entities->{url}
+    || $entities->{text_link}
     || $msg->{forward_from}
     || $msg->{forward_from_chat}
     || $msg->{sticker} )
