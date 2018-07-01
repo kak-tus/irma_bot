@@ -42,4 +42,10 @@ sub _message_res {
   return;
 }
 
+sub healthcheck {
+  my $self = shift->openapi->valid_input or return;
+  $self->render( openapi => {} );
+  return;
+}
+
 1;

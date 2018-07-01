@@ -64,3 +64,13 @@ paths:
           description: Response
           schema:
             type: object
+  '/healthcheck':
+    get:
+      x-mojo-to: 'Root#healthcheck'
+      x-mojo-name: healthcheck
+      summary: Healthcheck
+      responses:
+        200:
+          description: Response
+          schema:
+            type: object
