@@ -372,6 +372,8 @@ sub _message_from_newbie {
 
   if ( $entities->{url}
     || $entities->{text_link}
+    || $entities->{mention}
+    || $entities->{email}
     || $msg->{forward_from}
     || $msg->{forward_from_chat}
     || $msg->{sticker} )
