@@ -429,9 +429,10 @@ sub _new_members {
       $self->logger->info('Ban by long name');
 
       $self->_kick_user(
-        user_id => $user->{id},
-        chat_id => $msg->{chat}{id},
-        type    => $msg->{chat}{type},
+        user_id    => $user->{id},
+        chat_id    => $msg->{chat}{id},
+        type       => $msg->{chat}{type},
+        message_id => $msg->{message_id},
         sub { }
       );
     }
@@ -624,7 +625,7 @@ sub _kick_user_res {
   }
 
   my $res_cb = sub {
-    state $cnt = 2;
+    state $cnt = 3;
     $cnt--;
     return if $cnt > 0;
     $cb->();
@@ -648,6 +649,18 @@ sub _kick_user_res {
     },
     $res_cb
   );
+
+  if ( $params->{message_id} ) {
+    my %form = (
+      chat_id    => $params->{chat_id},
+      message_id => $params->{message_id},
+    );
+
+    $self->_request( 'deleteMessage', \%form, $res_cb );
+  }
+  else {
+    $res_cb->();
+  }
 
   return;
 }

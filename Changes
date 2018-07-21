@@ -1,3 +1,6 @@
+2018-07-21 0.15
+  - Delete join message on banned user.
+
 2018-07-21 0.14
   - Ban users with extra long names.
 
