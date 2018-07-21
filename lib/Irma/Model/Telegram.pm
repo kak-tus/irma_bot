@@ -420,6 +420,23 @@ sub _new_members {
     return;
   }
 
+  ## Ban users with extra long names
+  ## It's probably "name spammers"
+  foreach my $user ( @{ $msg->{new_chat_members} } ) {
+    if ( length( $user->{first_name} ) >= $self->config->{name_limit}
+      && length( $user->{last_name} ) >= $self->config->{name_limit} )
+    {
+      $self->logger->info('Ban by long name');
+
+      $self->_kick_user(
+        user_id => $user->{id},
+        chat_id => $msg->{chat}{id},
+        type    => $msg->{chat}{type},
+        sub { }
+      );
+    }
+  }
+
   $self->db->read_group(
     id => $msg->{chat}{id},
     sub {

@@ -19,6 +19,7 @@ irma:
     notify_url: 'https://example.com'
     notify_key: some_key
     api_key: some_key
+    name_limit: 100
     limits:
       greeting: 1000
       question: 100
