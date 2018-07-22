@@ -376,7 +376,8 @@ sub _message_from_newbie {
     || $entities->{email}
     || $msg->{forward_from}
     || $msg->{forward_from_chat}
-    || $msg->{sticker} )
+    || $msg->{sticker}
+    || $msg->{photo} )
   {
     $self->logger->debug('Restricted message found');
 
@@ -943,6 +944,18 @@ sub _search_entities {
   foreach my $cmd ( keys %{ $self->config->{texts}{commands} } ) {
     next if index( $msg->{text}, $cmd ) < 0;
     $entities{_bot_command} = $cmd;
+  }
+
+  if ( $msg->{caption_entities} ) {
+    foreach my $entity ( @{ $msg->{caption_entities} } ) {
+      $entity->{_value}
+          = substr( $msg->{caption}, $entity->{offset}, $entity->{length} );
+      $entities{ $entity->{type} } = $entity;
+
+      if ( $bot_name eq $entity->{_value} ) {
+        $entities{_bot_name} = $entity;
+      }
+    }
   }
 
   return %entities;
