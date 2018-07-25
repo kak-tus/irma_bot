@@ -425,7 +425,7 @@ sub _new_members {
   ## It's probably "name spammers"
   foreach my $user ( @{ $msg->{new_chat_members} } ) {
     if ( length( $user->{first_name} ) >= $self->config->{name_limit}
-      && length( $user->{last_name} ) >= $self->config->{name_limit} )
+      || length( $user->{last_name} ) >= $self->config->{name_limit} )
     {
       $self->logger->info('Ban by long name');
 
