@@ -1,3 +1,6 @@
+2018-08-04 0.18
+  - Fix ban repeated logins.
+
 2018-07-26 0.17
   - Ban users with extra long first name or last name.
 

@@ -256,13 +256,22 @@ sub _message {
   my $chat_id = $msg->{chat}{id};
   my $user_id = $msg->{from}{id};
 
+  my $res_cb = sub {
+    state $cnt = 2;
+    $cnt--;
+    return if $cnt > 0;
+    $cb->();
+  };
+
+  $self->_ban_long_names( $msg, $res_cb );
+
   $self->storage->read(
     key  => 'kick',
     vals => {
       chat_id => $chat_id,
       user_id => $user_id,
     },
-    sub { $self->_message_kick_res( \%params, @_, $cb ) }
+    sub { $self->_message_kick_res( \%params, @_, $res_cb ) }
   );
 
   return;
@@ -331,7 +340,7 @@ sub _message_newbie_res {
   my %entities = $self->_search_entities($msg);
 
   if ( $res && $res <= 4 ) {
-    $self->logger->debug( 'Newbie found: ', $res );
+    $self->logger->debug( 'Newbie found: ' . $res );
     $self->_message_from_newbie( $params, \%entities, $cb );
     return;
   }
@@ -419,24 +428,6 @@ sub _new_members {
   if ( $msg->{from}{id} != $msg->{new_chat_members}[0]{id} ) {
     $cb->( {} );
     return;
-  }
-
-  ## Ban users with extra long names
-  ## It's probably "name spammers"
-  foreach my $user ( @{ $msg->{new_chat_members} } ) {
-    if ( length( $user->{first_name} ) >= $self->config->{name_limit}
-      || length( $user->{last_name} ) >= $self->config->{name_limit} )
-    {
-      $self->logger->info('Ban by long name');
-
-      $self->_kick_user(
-        user_id    => $user->{id},
-        chat_id    => $msg->{chat}{id},
-        type       => $msg->{chat}{type},
-        message_id => $msg->{message_id},
-        sub { }
-      );
-    }
   }
 
   $self->db->read_group(
@@ -959,6 +950,57 @@ sub _search_entities {
   }
 
   return %entities;
+}
+
+sub _ban_long_names {
+  my __PACKAGE__ $self = shift;
+  my $cb               = pop;
+  my $msg              = shift;
+
+  unless ( $msg->{new_chat_members}
+    && scalar( @{ $msg->{new_chat_members} } ) )
+  {
+    $cb->();
+    return;
+  }
+
+  my @to_ban;
+
+  ## Ban users with extra long names
+  ## It's probably "name spammers"
+  foreach my $user ( @{ $msg->{new_chat_members} } ) {
+    if ( length( $user->{first_name} ) >= $self->config->{name_limit}
+      || length( $user->{last_name} ) >= $self->config->{name_limit} )
+    {
+      $self->logger->info('Ban by long name');
+
+      my %val = (
+        user_id    => $user->{id},
+        chat_id    => $msg->{chat}{id},
+        type       => $msg->{chat}{type},
+        message_id => $msg->{message_id},
+      );
+      push @to_ban, \%val;
+    }
+  }
+
+  unless ( scalar(@to_ban) ) {
+    $cb->();
+    return;
+  }
+
+  my $res_cb = sub {
+    state $cnt = scalar(@to_ban);
+    $cnt--;
+    return if $cnt > 0;
+    $cb->();
+  };
+
+  foreach my $val (@to_ban) {
+    $self->_kick_user( %$val, $res_cb );
+  }
+
+  return;
 }
 
 1;
