@@ -257,10 +257,21 @@ sub _message {
   my $user_id = $msg->{from}{id};
 
   my $res_cb = sub {
+    my ( $res, $err ) = @_;
+    state( $g_res, $g_err );
+
+    if ($res) {
+      $g_res = $res;
+    }
+    if ($err) {
+      $g_err = $err;
+    }
+
     state $cnt = 2;
     $cnt--;
     return if $cnt > 0;
-    $cb->();
+
+    $cb->( $g_res, $g_err );
   };
 
   $self->_ban_long_names( $msg, $res_cb );
