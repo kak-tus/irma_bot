@@ -511,7 +511,7 @@ sub _new_members_url {
   foreach my $user ( @{ $msg->{new_chat_members} } ) {
     $self->storage->create(
       key  => 'newbie',
-      ttl  => 86400 * 7,
+      ttl  => 86400 * 365,
       vals => {
         chat_id => $chat_id,
         user_id => $user->{id},
