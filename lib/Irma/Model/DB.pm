@@ -163,7 +163,7 @@ sub create_group {
     INSERT INTO groups
     ( id, $vals_str ) VALUES ( ?, $marks_str )
     ON CONFLICT (id) DO UPDATE SET
-      ($vals_str) = ($conflict_str)
+      ($vals_str) = ROW($conflict_str)
   };
 
   $self->_query(
