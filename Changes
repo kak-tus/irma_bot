@@ -1,3 +1,6 @@
+2018-11-10 0.23
+  - Delete questions and join messages.
+
 2018-11-10 0.22
   - Postgresql 10 compatibility.
 

@@ -219,6 +219,16 @@ sub _callback_query_group {
   my $chat_id = $msg->{chat}{id};
   my $type    = $msg->{chat}{type};
 
+  my $res_cb = sub {
+    state $cnt= 2;
+    $cnt--;
+    return if $cnt > 0;
+    $cb->( {} );
+  };
+
+  my %form = ( chat_id => $chat_id, message_id => $msg->{message_id} );
+  $self->_request( 'deleteMessage', \%form, $res_cb );
+
   if ($correct) {
     $self->logger->debug('Correct answer');
     $self->storage->delete(
@@ -227,7 +237,7 @@ sub _callback_query_group {
         chat_id => $chat_id,
         user_id => $user_id,
       },
-      sub { }
+      $res_cb
     );
   }
   else {
@@ -235,11 +245,9 @@ sub _callback_query_group {
       user_id => $user_id,
       chat_id => $chat_id,
       type    => $type,
-      sub { }
+      $res_cb
     );
   }
-
-  $cb->( {} );
 
   return;
 }
@@ -534,6 +542,15 @@ sub _new_members_question {
   my $chat_id = $msg->{chat}{id};
   my $type    = $msg->{chat}{type};
 
+  my @to_del;
+
+  ## Delete new chat member message in case of kick
+  my %val = (
+    chat_id    => $chat_id,
+    message_id => $msg->{message_id},
+  );
+  push @to_del, \%val;
+
   foreach my $user ( @{ $msg->{new_chat_members} } ) {
     my $question_id = int( rand( @{ $group->{questions} } ) );
     my $question    = $group->{questions}[$question_id];
@@ -562,7 +579,21 @@ sub _new_members_question {
     );
 
     my $method = delete $resp->{method};
-    $self->_request( $method, $resp, sub { } );
+    $self->_request(
+      $method, $resp,
+      sub {
+        my ( $res, $err ) = @_;
+
+        if ( $res && $res->{result} && $res->{result}{message_id} ) {
+          ## Delete question message in case of kick
+          my %val = (
+            chat_id    => $chat_id,
+            message_id => $res->{result}{message_id},
+          );
+          push @to_del, \%val;
+        }
+      }
+    );
 
     $self->storage->create(
       key  => 'kick',
@@ -578,10 +609,11 @@ sub _new_members_question {
     $timer = AE::timer 60, 0, sub {
       undef $timer;
       $self->_kick_user(
-        user_id => $user->{id},
-        chat_id => $chat_id,
-        type    => $type,
-        check   => 1,
+        user_id   => $user->{id},
+        chat_id   => $chat_id,
+        type      => $type,
+        check     => 1,
+        to_delete => \@to_del,
         sub { }
       );
     };
@@ -653,13 +685,17 @@ sub _kick_user_res {
     $res_cb
   );
 
-  if ( $params->{message_id} ) {
-    my %form = (
-      chat_id    => $params->{chat_id},
-      message_id => $params->{message_id},
-    );
+  if ( $params->{to_delete} && scalar( @{ $params->{to_delete} } ) ) {
+    my $res_cb_del = sub {
+      state $cnt = scalar( @{ $params->{to_delete} } );
+      $cnt--;
+      return if $cnt > 0;
+      $res_cb->();
+    };
 
-    $self->_request( 'deleteMessage', \%form, $res_cb );
+    foreach my $form ( @{ $params->{to_delete} } ) {
+      $self->_request( 'deleteMessage', $form, $res_cb_del );
+    }
   }
   else {
     $res_cb->();
@@ -990,11 +1026,17 @@ sub _ban_long_names {
     {
       $self->logger->info('Ban by long name');
 
+      my @to_del = (
+        { chat_id    => $msg->{chat}{id},
+          message_id => $msg->{message_id},
+        }
+      );
+
       my %val = (
-        user_id    => $user->{id},
-        chat_id    => $msg->{chat}{id},
-        type       => $msg->{chat}{type},
-        message_id => $msg->{message_id},
+        user_id   => $user->{id},
+        chat_id   => $msg->{chat}{id},
+        type      => $msg->{chat}{type},
+        to_delete => \@to_del,
       );
       push @to_ban, \%val;
     }
