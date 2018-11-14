@@ -1,3 +1,7 @@
+2018-11-14 v0.23.1
+  - Use semver versioning.
+  - Fix question deletion in case of URL spam after join.
+
 2018-11-10 0.23
   - Delete questions and join messages.
 

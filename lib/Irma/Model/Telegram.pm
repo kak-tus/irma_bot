@@ -314,17 +314,16 @@ sub _message_kick_res {
   if ($res) {
     $self->logger->debug('User found in kick pool');
 
-    $cb->( {} );
+    my %form = ( chat_id => $chat_id, message_id => $msg->{message_id} );
 
     $self->_kick_user(
-      user_id => $user_id,
-      chat_id => $chat_id,
-      type    => $type,
-      sub { }
+      user_id       => $user_id,
+      chat_id       => $chat_id,
+      type          => $type,
+      leave_session => 1,
+      to_delete     => [ \%form ],
+      sub { $cb->( {} ) }
     );
-
-    my %form = ( chat_id => $chat_id, message_id => $msg->{message_id} );
-    $self->_request( 'deleteMessage', \%form, sub { } );
 
     return;
   }
@@ -676,14 +675,19 @@ sub _kick_user_res {
 
   $self->_request( 'kickChatMember', \%form, $res_cb );
 
-  $self->storage->delete(
-    key  => 'kick',
-    vals => {
-      chat_id => $params->{chat_id},
-      user_id => $params->{user_id},
-    },
-    $res_cb
-  );
+  if ( $params->{leave_session} ) {
+    $res_cb->();
+  }
+  else {
+    $self->storage->delete(
+      key  => 'kick',
+      vals => {
+        chat_id => $params->{chat_id},
+        user_id => $params->{user_id},
+      },
+      $res_cb
+    );
+  }
 
   if ( $params->{to_delete} && scalar( @{ $params->{to_delete} } ) ) {
     my $res_cb_del = sub {
