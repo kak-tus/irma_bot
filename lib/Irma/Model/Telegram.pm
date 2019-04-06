@@ -38,7 +38,7 @@ use Class::XSAccessor { accessors => [ keys %{ $VALIDATION{new} } ] };
 
 my $INSTANCE;
 
-my $JSON = Cpanel::JSON::XS->new;
+my $JSON = Cpanel::JSON::XS->new->allow_blessed;
 
 App::Environ::Config->register(
   qw(

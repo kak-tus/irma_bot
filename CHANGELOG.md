@@ -1,3 +1,6 @@
+2019-04-06 v0.23.2
+  - Fixed error logging.
+
 2018-11-14 v0.23.1
   - Use semver versioning.
   - Fix question deletion in case of URL spam after join.
