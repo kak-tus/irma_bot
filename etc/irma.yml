@@ -1,0 +1,15 @@
+telegram:
+  listen: '0.0.0.0:8080'
+  token: '${IRMA_TELEGRAM_TOKEN}'
+  url: '${IRMA_TELEGRAM_URL}'
+  path: '${IRMA_TELEGRAM_PATH}'
+  proxy: '${IRMA_TELEGRAM_PROXY}'
+
+log:
+  tag: irma
+  level: debug
+  output: stdsep
+  format: json
+  formatConfig:
+    colors: false
+    disableTimestamp: true
