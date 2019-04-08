@@ -5,6 +5,7 @@ go 1.12
 require (
 	git.aqq.me/go/app v1.7.1
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/iph0/conf v1.4.3
 	github.com/iph0/merger v0.0.0-20181002131156-d0a24e957460 // indirect

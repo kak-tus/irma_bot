@@ -4,7 +4,7 @@ telegram:
   url: '${IRMA_TELEGRAM_URL}'
   path: '${IRMA_TELEGRAM_PATH}'
   proxy: '${IRMA_TELEGRAM_PROXY}'
-  name_limit: 100
+  nameLimit: 100
   limits:
     greeting: 1000
     question: 100
@@ -79,6 +79,9 @@ telegram:
           Send me "ban_question" to enable
         field: ban_question
         value: 0
+
+storage:
+  redisAddrs: '${IRMA_REDIS_ADDRS}'
 
 log:
   tag: irma

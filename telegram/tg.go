@@ -10,6 +10,7 @@ import (
 	"git.aqq.me/go/app/event"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/iph0/conf"
+	"github.com/kak-tus/irma_bot/storage"
 	"golang.org/x/net/proxy"
 )
 
@@ -47,10 +48,11 @@ func init() {
 			srv := &http.Server{Addr: cnf.Listen}
 
 			inst = &InstanceObj{
-				bot: bot,
-				cnf: cnf,
-				log: applog.GetLogger().Sugar(),
-				srv: srv,
+				bot:  bot,
+				cnf:  cnf,
+				log:  applog.GetLogger().Sugar(),
+				srv:  srv,
+				stor: storage.Get(),
 			}
 
 			inst.log.Info("Started telegram")
