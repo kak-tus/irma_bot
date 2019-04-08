@@ -4,6 +4,81 @@ telegram:
   url: '${IRMA_TELEGRAM_URL}'
   path: '${IRMA_TELEGRAM_PATH}'
   proxy: '${IRMA_TELEGRAM_PROXY}'
+  name_limit: 100
+  limits:
+    greeting: 1000
+    question: 100
+    answer: 50
+
+  texts:
+    usage: |
+      To enable AntiSpam protection of your group:
+
+      1. Add this bot to group.
+      2. Grant administrator permissions to bot (this allow bot kick spammers).
+
+      By default bot uses URL protection: if newbie user send URL or forward message - bot kicks user.
+      You can disable or enable this protection by sending to bot:
+
+      @${IRMA_BOT_NAME} ban_url
+
+      or
+
+      @${IRMA_BOT_NAME} no_ban_url
+
+      Additionaly, you can add questions protection
+      Send message in group, format it like this:
+
+      @${IRMA_BOT_NAME}
+      Hello. This group has AntiSpam protection.
+      You must get correct answer to next question in one minute or you will be kicked.
+      In case of incorrect answer you can try join group after one day.
+
+      Question 1?+Correct answer 1;Incorrect answer 1;Incorrect answer 2
+      Question 2?+Correct answer 1;+Correct answer 2;Incorrect answer 1
+
+      Disable or enable this by
+
+      @${IRMA_BOT_NAME} ban_question
+
+      or
+
+      @${IRMA_BOT_NAME} no_ban_question
+
+      https://github.com/kak-tus/irma_bot
+    set: AntiSpam protection enabled
+    fail: |
+      Can't parse your message.
+
+      Must be set greeting, at least one question and at least one correct answer.
+
+      Greeting, questions and answers has length limit.
+      Greeting - ${..limits.greeting} characters, question - ${..limits.question}, answer - ${..limits.answer}.
+    commands:
+      ban_url:
+        text: |
+          URLs protection enabled
+          Send me "no_ban_url" to disable
+        field: ban_url
+        value: 1
+      no_ban_url:
+        text: |
+          URLs protection disabled
+          Send me "ban_url" to enable
+        field: ban_url
+        value: 0
+      ban_question:
+        text: |
+          Questions protection enabled
+          Send me "no_ban_question" to disable
+        field: ban_question
+        value: 1
+      no_ban_question:
+        text: |
+          Questions protection disabled
+          Send me "ban_question" to enable
+        field: ban_question
+        value: 0
 
 log:
   tag: irma

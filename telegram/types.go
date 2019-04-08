@@ -18,6 +18,11 @@ type instanceConf struct {
 	Listen string
 	Path   string
 	Proxy  string
+	Texts  textsConf
 	Token  string
 	URL    string
+}
+
+type textsConf struct {
+	Usage string
 }
