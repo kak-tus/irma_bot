@@ -10,6 +10,7 @@ import (
 	"git.aqq.me/go/app/event"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/iph0/conf"
+	"github.com/kak-tus/irma_bot/settings"
 	"github.com/kak-tus/irma_bot/storage"
 	"golang.org/x/net/proxy"
 )
@@ -51,6 +52,7 @@ func init() {
 				bot:  bot,
 				cnf:  cnf,
 				log:  applog.GetLogger().Sugar(),
+				sett: settings.Get(),
 				srv:  srv,
 				stor: storage.Get(),
 			}

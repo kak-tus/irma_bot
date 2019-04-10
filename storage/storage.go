@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"git.aqq.me/go/app/event"
 	"github.com/go-redis/redis"
 	"github.com/iph0/conf"
+	jsoniter "github.com/json-iterator/go"
 )
 
 var inst *InstanceObj
@@ -48,6 +48,7 @@ func init() {
 
 			inst = &InstanceObj{
 				cnf: cnf,
+				enc: jsoniter.Config{UseNumber: true}.Froze(),
 				log: applog.GetLogger().Sugar(),
 				rdb: rdb,
 			}
@@ -62,6 +63,11 @@ func init() {
 		func() error {
 			inst.log.Info("Stop storage")
 
+			err := inst.rdb.Close()
+			if err != nil {
+				return err
+			}
+
 			inst.log.Info("Stopped storage")
 			return nil
 		},
@@ -70,30 +76,4 @@ func init() {
 
 func Get() *InstanceObj {
 	return inst
-}
-
-func (o *InstanceObj) IsKicked(chatID int64, userID int) (bool, error) {
-	key := fmt.Sprintf("irma_kick_{%d_%d}", chatID, userID)
-
-	res, err := o.rdb.Exists(key).Result()
-	if err != nil {
-		return false, err
-	}
-
-	if res == 0 {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func (o *InstanceObj) SetKicked(chatID int64, userID int) error {
-	key := fmt.Sprintf("irma_kick_{%d_%d}", chatID, userID)
-
-	_, err := o.rdb.Set(key, 1, time.Minute*10).Result()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

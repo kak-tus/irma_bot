@@ -3,6 +3,7 @@ package telegram
 import (
 	"net/http"
 
+	"github.com/kak-tus/irma_bot/settings"
 	"github.com/kak-tus/irma_bot/storage"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -13,11 +14,13 @@ type InstanceObj struct {
 	bot  *tgbotapi.BotAPI
 	cnf  instanceConf
 	log  *zap.SugaredLogger
+	sett *settings.InstanceObj
 	srv  *http.Server
 	stor *storage.InstanceObj
 }
 
 type instanceConf struct {
+	BotName   string
 	Listen    string
 	NameLimit int
 	Path      string
@@ -28,5 +31,12 @@ type instanceConf struct {
 }
 
 type textsConf struct {
-	Usage string
+	Usage    string
+	Commands map[string]command
+}
+
+type command struct {
+	Field string
+	Text  string
+	Value bool
 }

@@ -4,6 +4,7 @@ telegram:
   url: '${IRMA_TELEGRAM_URL}'
   path: '${IRMA_TELEGRAM_PATH}'
   proxy: '${IRMA_TELEGRAM_PROXY}'
+  botName : '${IRMA_BOT_NAME}'
   nameLimit: 100
   limits:
     greeting: 1000
@@ -60,28 +61,31 @@ telegram:
           URLs protection enabled
           Send me "no_ban_url" to disable
         field: ban_url
-        value: 1
+        value: true
       no_ban_url:
         text: |
           URLs protection disabled
           Send me "ban_url" to enable
         field: ban_url
-        value: 0
+        value: false
       ban_question:
         text: |
           Questions protection enabled
           Send me "no_ban_question" to disable
         field: ban_question
-        value: 1
+        value: true
       no_ban_question:
         text: |
           Questions protection disabled
           Send me "ban_question" to enable
         field: ban_question
-        value: 0
+        value: false
 
 storage:
   redisAddrs: '${IRMA_REDIS_ADDRS}'
+
+settings:
+  dbAddr: '${IRMA_DB_ADDR}'
 
 log:
   tag: irma
