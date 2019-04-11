@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -19,7 +20,7 @@ func (o *InstanceObj) AddToActionPool(act Action) error {
 		return err
 	}
 
-	sc := time.Now().In(time.UTC).Unix()
+	sc := time.Now().Add(time.Minute).In(time.UTC).Unix()
 
 	z := redis.Z{
 		Member: val,
@@ -32,4 +33,38 @@ func (o *InstanceObj) AddToActionPool(act Action) error {
 	}
 
 	return nil
+}
+
+func (o *InstanceObj) GetFromActionPool() ([]Action, error) {
+	sc := time.Now().In(time.UTC).Unix()
+
+	pool := o.rdb.TxPipeline()
+
+	z := redis.ZRangeBy{
+		Max: strconv.Itoa(int(sc)),
+		Min: "0",
+	}
+
+	rangeCmd := pool.ZRangeByScore("irma_kick_pool", z)
+	_ = pool.ZRemRangeByScore("irma_kick_pool", z.Min, z.Max)
+
+	_, err := pool.Exec()
+	if err != nil {
+		return nil, err
+	}
+
+	acts := make([]Action, 0)
+
+	for _, v := range rangeCmd.Val() {
+		var a Action
+
+		err := o.enc.UnmarshalFromString(v, &a)
+		if err != nil {
+			return nil, err
+		}
+
+		acts = append(acts, a)
+	}
+
+	return acts, nil
 }

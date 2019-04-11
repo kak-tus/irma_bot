@@ -3,6 +3,7 @@ package telegram
 import (
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"git.aqq.me/go/app/appconf"
@@ -51,9 +52,11 @@ func init() {
 			inst = &InstanceObj{
 				bot:  bot,
 				cnf:  cnf,
+				lock: &sync.WaitGroup{},
 				log:  applog.GetLogger().Sugar(),
 				sett: settings.Get(),
 				srv:  srv,
+				stop: make(chan bool, 1),
 				stor: storage.Get(),
 			}
 
@@ -71,6 +74,9 @@ func init() {
 			if err != nil {
 				return err
 			}
+
+			inst.stop <- true
+			inst.lock.Wait()
 
 			inst.log.Info("Stopped telegram")
 			return nil
@@ -111,6 +117,33 @@ func (o *InstanceObj) Start() error {
 				o.log.Error(err)
 			}
 		}
+	}()
+
+	tick := time.NewTicker(time.Second * 10)
+	o.lock.Add(1)
+
+	go func() {
+		for {
+			var stop bool
+
+			select {
+			case <-tick.C:
+			case <-o.stop:
+				stop = true
+			}
+
+			if stop {
+				break
+			}
+
+			err := o.processActions()
+			if err != nil {
+				o.log.Error(err)
+				continue
+			}
+		}
+
+		o.lock.Done()
 	}()
 
 	return nil

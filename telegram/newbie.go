@@ -106,7 +106,13 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 				ChatID:    res.Chat.ID,
 				Type:      "del",
 				MessageID: res.MessageID,
+				UserID:    m.ID,
 			})
+			if err != nil {
+				return err
+			}
+
+			err = o.stor.SetKicked(msg.Chat.ID, m.ID)
 			if err != nil {
 				return err
 			}
@@ -115,6 +121,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 				ChatID:    msg.Chat.ID,
 				Type:      "del",
 				MessageID: msg.MessageID,
+				UserID:    m.ID,
 			})
 			if err != nil {
 				return err

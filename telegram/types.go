@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/kak-tus/irma_bot/settings"
 	"github.com/kak-tus/irma_bot/storage"
@@ -13,9 +14,11 @@ import (
 type InstanceObj struct {
 	bot  *tgbotapi.BotAPI
 	cnf  instanceConf
+	lock *sync.WaitGroup
 	log  *zap.SugaredLogger
 	sett *settings.InstanceObj
 	srv  *http.Server
+	stop chan bool
 	stor *storage.InstanceObj
 }
 
