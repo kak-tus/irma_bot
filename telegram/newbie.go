@@ -91,7 +91,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 			btns := make([][]tgbotapi.InlineKeyboardButton, len(gr.Questions[qID].Answers))
 
 			for i, a := range gr.Questions[qID].Answers {
-				id := fmt.Sprintf("%d", m.ID)
+				id := fmt.Sprintf("%d_%d_%d_%d", m.ID, msg.Chat.ID, qID, i)
 				btns[i] = []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData(a.Text, id)}
 			}
 
@@ -106,6 +106,15 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 				ChatID:    res.Chat.ID,
 				Type:      "del",
 				MessageID: res.MessageID,
+			})
+			if err != nil {
+				return err
+			}
+
+			err = o.stor.AddToActionPool(storage.Action{
+				ChatID:    msg.Chat.ID,
+				Type:      "del",
+				MessageID: msg.MessageID,
 			})
 			if err != nil {
 				return err

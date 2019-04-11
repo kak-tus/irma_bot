@@ -60,3 +60,14 @@ func (o *InstanceObj) AddToActionPool(act Action) error {
 
 	return nil
 }
+
+func (o *InstanceObj) DelKicked(chatID int64, userID int) error {
+	key := fmt.Sprintf("irma_kick_{%d_%d}", chatID, userID)
+
+	_, err := o.rdb.Del(key).Result()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
