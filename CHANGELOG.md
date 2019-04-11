@@ -1,3 +1,6 @@
+2019-04-11 v1.1.1
+  - Rewritten on Go from Perl to improve Memory/CPU usage and docker image size.
+
 2019-04-06 v0.23.2
   - Fixed error logging.
 
