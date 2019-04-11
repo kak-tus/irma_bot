@@ -6,7 +6,6 @@ require (
 	git.aqq.me/go/app v1.7.1
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/Masterminds/squirrel v1.1.0
-	github.com/davecgh/go-spew v1.1.1
 	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/iph0/conf v1.4.3
