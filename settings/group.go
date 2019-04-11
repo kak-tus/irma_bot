@@ -18,13 +18,13 @@ type Group struct {
 }
 
 type Question struct {
-	Answers []Answer
-	Text    string
+	Answers []Answer `json:"answers"`
+	Text    string   `json:"text"`
 }
 
 type Answer struct {
-	Correct int16
-	Text    string
+	Correct int16  `json:"correct"`
+	Text    string `json:"text"`
 }
 
 func (o *InstanceObj) GetGroup(id int64) (*Group, error) {

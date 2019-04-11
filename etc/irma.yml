@@ -51,7 +51,7 @@ telegram:
     fail: |
       Can't parse your message.
 
-      Must be set greeting, at least one question and at least one correct answer.
+      Must be set greeting, at least one question, at least one correct answer and at least one incorrect answer.
 
       Greeting, questions and answers has length limit.
       Greeting - ${..limits.greeting} characters, question - ${..limits.question}, answer - ${..limits.answer}.

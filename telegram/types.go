@@ -21,6 +21,7 @@ type InstanceObj struct {
 
 type instanceConf struct {
 	BotName   string
+	Limits    limConf
 	Listen    string
 	NameLimit int
 	Path      string
@@ -31,12 +32,20 @@ type instanceConf struct {
 }
 
 type textsConf struct {
-	Usage    string
 	Commands map[string]command
+	Fail     string
+	Set      string
+	Usage    string
 }
 
 type command struct {
 	Field string
 	Text  string
 	Value bool
+}
+
+type limConf struct {
+	Answer   int
+	Greeting int
+	Question int
 }
