@@ -75,5 +75,12 @@ func (o *InstanceObj) banKickPool(msg *tgbotapi.Message) (bool, error) {
 		return true, err
 	}
 
+	del := tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID)
+
+	_, err = o.bot.DeleteMessage(del)
+	if err != nil {
+		return true, err
+	}
+
 	return true, nil
 }

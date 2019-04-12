@@ -1,3 +1,6 @@
+2019-04-12 v1.1.2
+  - Fixed kicked deletion.
+
 2019-04-11 v1.1.1
   - Rewritten on Go from Perl to improve Memory/CPU usage and docker image size.
 
