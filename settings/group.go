@@ -8,12 +8,13 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/pgtype"
 )
 
 type Group struct {
-	BanQuestion bool
-	BanURL      bool
-	Greeting    string
+	BanQuestion pgtype.Bool
+	BanURL      pgtype.Bool
+	Greeting    pgtype.Varchar
 	Questions   []Question
 }
 
@@ -44,7 +45,11 @@ func (o *InstanceObj) GetGroup(id int64) (*Group, error) {
 		return nil, err
 	}
 
-	defer tx.Commit()
+	defer func() {
+		if err := tx.Commit(); err != nil {
+			o.log.Error(err)
+		}
+	}()
 
 	gr := &Group{}
 
@@ -102,13 +107,11 @@ func (o *InstanceObj) CreateGroup(id int64, upd map[string]interface{}) error {
 		return err
 	}
 
-	_, err = tx.Exec(sql, append([]interface{}{id}, args...)...)
-	if err != nil {
+	if _, err := tx.Exec(sql, append([]interface{}{id}, args...)...); err != nil {
 		return err
 	}
 
-	err = tx.Commit()
-	if err != nil {
+	if err := tx.Commit(); err != nil {
 		return err
 	}
 

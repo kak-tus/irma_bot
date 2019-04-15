@@ -60,7 +60,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 		return err
 	}
 
-	if gr == nil || gr.BanURL {
+	if gr == nil || gr.BanURL.Bool {
 		for _, m := range *msg.NewChatMembers {
 			err := o.stor.AddNewbieMessages(msg.Chat.ID, m.ID)
 			if err != nil {
@@ -69,7 +69,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 		}
 	}
 
-	if gr != nil && gr.BanQuestion && len(gr.Questions) != 0 {
+	if gr != nil && gr.BanQuestion.Bool && len(gr.Questions) != 0 {
 		for _, m := range *msg.NewChatMembers {
 			qID := rand.Intn(len(gr.Questions))
 
@@ -84,7 +84,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 				}
 			}
 
-			txt := fmt.Sprintf("@%s %s\n\n%s", name, gr.Greeting, gr.Questions[qID].Text)
+			txt := fmt.Sprintf("@%s %s\n\n%s", name, gr.Greeting.String, gr.Questions[qID].Text)
 
 			resp := tgbotapi.NewMessage(msg.Chat.ID, txt)
 

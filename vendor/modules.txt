@@ -26,10 +26,10 @@ github.com/iph0/conf
 github.com/iph0/merger
 # github.com/jackc/pgx v3.3.0+incompatible
 github.com/jackc/pgx
+github.com/jackc/pgx/pgtype
 github.com/jackc/pgx/internal/sanitize
 github.com/jackc/pgx/pgio
 github.com/jackc/pgx/pgproto3
-github.com/jackc/pgx/pgtype
 github.com/jackc/pgx/chunkreader
 # github.com/json-iterator/go v1.1.6
 github.com/json-iterator/go

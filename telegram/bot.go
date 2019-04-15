@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/jackc/pgx/pgtype"
 	"github.com/kak-tus/irma_bot/settings"
 )
 
@@ -164,7 +165,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *settings.Group, error) 
 	}
 
 	gr := &settings.Group{
-		Greeting:  greeting,
+		Greeting:  pgtype.Varchar{String: greeting, Status: pgtype.Present},
 		Questions: qst,
 	}
 
