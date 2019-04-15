@@ -23,7 +23,7 @@ func (o *InstanceObj) IsKicked(chatID int64, userID int) (bool, error) {
 func (o *InstanceObj) SetKicked(chatID int64, userID int) error {
 	key := fmt.Sprintf("irma_kick_{%d_%d}", chatID, userID)
 
-	_, err := o.rdb.Set(key, 1, time.Minute*10).Result()
+	_, err := o.rdb.Set(key, 1, time.Minute*5).Result()
 	if err != nil {
 		return err
 	}
