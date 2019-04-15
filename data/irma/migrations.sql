@@ -36,3 +36,11 @@ ALTER TABLE groups DROP COLUMN ban_question;
 
 ALTER TABLE groups ALTER COLUMN greeting SET NOT NULL;
 ALTER TABLE groups ALTER COLUMN questions SET NOT NULL;
+
+-- 3 up
+
+ALTER TABLE public.groups ALTER COLUMN ban_url DROP DEFAULT;
+
+-- 3 down
+
+ALTER TABLE public.groups ALTER COLUMN ban_url SET DEFAULT TRUE;

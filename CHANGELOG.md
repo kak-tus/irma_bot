@@ -1,3 +1,6 @@
+2019-04-16 v1.1.3
+  - Remove default ban_url setting from database. It is controlled by code.
+
 2019-04-12 v1.1.2
   - Fixed kicked deletion.
 
