@@ -3,6 +3,7 @@
   - Lower kick pool period.
   - Fixed work with new chats with null values in db.
   - Questions protection enabled by default.
+  - Special protection from immediately added messages.
 
 2019-04-12 v1.1.2
   - Fixed kicked deletion.

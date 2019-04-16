@@ -14,13 +14,13 @@ type Action struct {
 	UserID    int
 }
 
-func (o *InstanceObj) AddToActionPool(act Action) error {
+func (o *InstanceObj) AddToActionPool(act Action, delay time.Duration) error {
 	val, err := o.enc.MarshalToString(act)
 	if err != nil {
 		return err
 	}
 
-	sc := time.Now().Add(time.Minute).In(time.UTC).Unix()
+	sc := time.Now().Add(delay).In(time.UTC).Unix()
 
 	z := redis.Z{
 		Member: val,

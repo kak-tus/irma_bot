@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/kak-tus/irma_bot/storage"
 )
 
 func (o *InstanceObj) process(msg tgbotapi.Update) error {
@@ -46,6 +48,28 @@ func (o *InstanceObj) processMsg(msg *tgbotapi.Message) error {
 	}
 	if banned {
 		return nil
+	}
+
+	// Special protection from immediately added messages.
+	// If user send message and newbie message is not processed yet.
+	// Over some time we got this action and delete message/kick user
+	// if it is in kick pool
+	act := storage.Action{
+		ChatID:    msg.Chat.ID,
+		Type:      "del",
+		MessageID: msg.MessageID,
+		UserID:    msg.From.ID,
+	}
+	if err := o.stor.AddToActionPool(act, time.Second); err != nil {
+		return err
+	}
+	act = storage.Action{
+		ChatID: msg.Chat.ID,
+		Type:   "kick",
+		UserID: msg.From.ID,
+	}
+	if err := o.stor.AddToActionPool(act, time.Second); err != nil {
+		return err
 	}
 
 	cnt, err := o.stor.GetNewbieMessages(msg.Chat.ID, msg.From.ID)

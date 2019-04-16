@@ -119,13 +119,13 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 			return err
 		}
 
-		err = o.stor.AddToActionPool(storage.Action{
+		act := storage.Action{
 			ChatID:    res.Chat.ID,
 			Type:      "del",
 			MessageID: res.MessageID,
 			UserID:    m.ID,
-		})
-		if err != nil {
+		}
+		if err := o.stor.AddToActionPool(act, time.Minute); err != nil {
 			return err
 		}
 
@@ -134,22 +134,22 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 			return err
 		}
 
-		err = o.stor.AddToActionPool(storage.Action{
+		act = storage.Action{
 			ChatID:    msg.Chat.ID,
 			Type:      "del",
 			MessageID: msg.MessageID,
 			UserID:    m.ID,
-		})
-		if err != nil {
+		}
+		if err := o.stor.AddToActionPool(act, time.Minute); err != nil {
 			return err
 		}
 
-		err = o.stor.AddToActionPool(storage.Action{
+		act = storage.Action{
 			ChatID: msg.Chat.ID,
 			Type:   "kick",
 			UserID: m.ID,
-		})
-		if err != nil {
+		}
+		if err := o.stor.AddToActionPool(act, time.Minute); err != nil {
 			return err
 		}
 	}
