@@ -98,16 +98,17 @@ func (o *InstanceObj) processCallback(msg *tgbotapi.CallbackQuery) error {
 		return err
 	}
 
-	if gr == nil {
-		return errors.New("No group found for callback")
-	}
-
 	questionID, err := strconv.Atoi(tkns[2])
 	if err != nil {
 		return err
 	}
 
-	if questionID >= len(gr.Questions) {
+	quest := o.cnf.DefaultQuestions
+	if gr != nil && len(gr.Questions) != 0 {
+		quest = gr.Questions
+	}
+
+	if questionID >= len(quest) {
 		return errors.New("Question id from callback greater, then questions count")
 	}
 
@@ -116,7 +117,7 @@ func (o *InstanceObj) processCallback(msg *tgbotapi.CallbackQuery) error {
 		return err
 	}
 
-	if answerNum >= len(gr.Questions[questionID].Answers) {
+	if answerNum >= len(quest[questionID].Answers) {
 		return errors.New("Answer num from callback greater, then answers count")
 	}
 
@@ -126,7 +127,7 @@ func (o *InstanceObj) processCallback(msg *tgbotapi.CallbackQuery) error {
 		return err
 	}
 
-	if gr.Questions[questionID].Answers[answerNum].Correct == 1 {
+	if quest[questionID].Answers[answerNum].Correct == 1 {
 		err := o.stor.DelKicked(chatID, userID)
 		if err != nil {
 			return err

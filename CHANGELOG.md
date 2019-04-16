@@ -2,6 +2,7 @@
   - Remove default ban_url setting from database. It is controlled by code.
   - Lower kick pool period.
   - Fixed work with new chats with null values in db.
+  - Questions protection enabled by default.
 
 2019-04-12 v1.1.2
   - Fixed kicked deletion.

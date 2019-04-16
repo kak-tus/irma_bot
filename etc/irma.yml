@@ -10,6 +10,32 @@ telegram:
     greeting: 1000
     question: 100
     answer: 50
+  defaultGreeting: |
+    Hello. This group has AntiSpam protection.
+    You must get correct answer to next question in one minute or you will be kicked.
+    In case of incorrect answer you can try join group after one day.
+  defaultQuestions:
+    -
+      answers:
+        -
+          correct: 1
+          text: Correct answer 1
+        -
+          text: Incorrect answer 1
+        -
+          text: Incorrect answer 2
+      text: Question 1
+    -
+      answers:
+        -
+          correct: 1
+          text: Correct answer 1
+        -
+          correct: 1
+          text: Correct answer 1
+        -
+          text: Incorrect answer 1
+      text: Question 2
 
   texts:
     usage: |
