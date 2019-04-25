@@ -23,9 +23,7 @@ func (o *InstanceObj) processActions() error {
 		}
 
 		if a.Type == "del" {
-			msg := tgbotapi.NewDeleteMessage(a.ChatID, a.MessageID)
-			_, err = o.bot.Send(msg)
-			if err != nil {
+			if err := o.deleteMessage(a.ChatID, a.MessageID); err != nil {
 				return err
 			}
 		} else if a.Type == "kick" {

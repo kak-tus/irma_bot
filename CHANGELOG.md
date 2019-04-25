@@ -1,3 +1,7 @@
+2019-04-26 v1.1.4
+  - Correctly process already deleted messages. Not stop after "already deleted"
+    error.
+
 2019-04-16 v1.1.3
   - Remove default ban_url setting from database. It is controlled by code.
   - Lower kick pool period.

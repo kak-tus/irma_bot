@@ -145,9 +145,7 @@ func (o *InstanceObj) processCallback(msg *tgbotapi.CallbackQuery) error {
 		return errors.New("Answer num from callback greater, then answers count")
 	}
 
-	del := tgbotapi.NewDeleteMessage(chatID, msg.Message.MessageID)
-	_, err = o.bot.Send(del)
-	if err != nil {
+	if err := o.deleteMessage(chatID, msg.Message.MessageID); err != nil {
 		return err
 	}
 

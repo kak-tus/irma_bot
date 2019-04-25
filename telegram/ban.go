@@ -40,10 +40,7 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 		}
 	}
 
-	del := tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID)
-
-	_, err := o.bot.DeleteMessage(del)
-	if err != nil {
+	if err := o.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
 		return true, err
 	}
 
@@ -75,10 +72,7 @@ func (o *InstanceObj) banKickPool(msg *tgbotapi.Message) (bool, error) {
 		return true, err
 	}
 
-	del := tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID)
-
-	_, err = o.bot.DeleteMessage(del)
-	if err != nil {
+	if err := o.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
 		return true, err
 	}
 

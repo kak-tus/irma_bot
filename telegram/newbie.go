@@ -45,10 +45,7 @@ func (o *InstanceObj) messageFromNewbie(msg *tgbotapi.Message) error {
 		return err
 	}
 
-	del := tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID)
-
-	_, err = o.bot.DeleteMessage(del)
-	if err != nil {
+	if err := o.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
 		return err
 	}
 
