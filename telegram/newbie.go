@@ -22,6 +22,15 @@ func (o *InstanceObj) messageFromNewbie(msg *tgbotapi.Message) error {
 		}
 	}
 
+	if msg.CaptionEntities != nil {
+		for _, e := range *msg.CaptionEntities {
+			if e.Type == "url" || e.Type == "text_link" || e.Type == "mention" || e.Type == "email" {
+				ban = true
+				break
+			}
+		}
+	}
+
 	if msg.ForwardFrom != nil || msg.ForwardFromChat != nil || msg.Sticker != nil || msg.Photo != nil {
 		ban = true
 	}
