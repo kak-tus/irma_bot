@@ -9,7 +9,7 @@ require (
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
-	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
+	github.com/go-telegram-bot-api/telegram-bot-api v4.6.5-0.20190424093250-87e7035a900c+incompatible
 	github.com/iph0/conf v1.4.3
 	github.com/iph0/merger v0.0.0-20181002131156-d0a24e957460 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect

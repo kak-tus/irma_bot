@@ -84,7 +84,7 @@ func (bot *BotAPI) MakeRequest(endpoint string, params url.Values) (APIResponse,
 		if apiResp.Parameters != nil {
 			parameters = *apiResp.Parameters
 		}
-		return apiResp, Error{apiResp.Description, parameters}
+		return apiResp, Error{Code: apiResp.ErrorCode, Message: apiResp.Description, ResponseParameters: parameters}
 	}
 
 	return apiResp, nil
@@ -526,6 +526,7 @@ func (bot *BotAPI) ListenForWebhook(pattern string) UpdatesChannel {
 
 	http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		bytes, _ := ioutil.ReadAll(r.Body)
+		r.Body.Close()
 
 		var update Update
 		json.Unmarshal(bytes, &update)
