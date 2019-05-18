@@ -10,13 +10,7 @@ COPY storage ./storage
 COPY telegram ./telegram
 COPY vendor ./vendor
 
-RUN \
-  apk add --no-cache \
-    upx \
-  \
-  && go build -mod=vendor -o /go/bin/irma_bot \
-  \
-  && upx -9 /go/bin/irma_bot
+RUN go build -mod=vendor -o /go/bin/irma_bot
 
 FROM alpine:3.9
 

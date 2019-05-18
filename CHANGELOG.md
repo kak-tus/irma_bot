@@ -1,3 +1,6 @@
+2019-05-19 v1.1.7
+  - Revert packing. Image size note reduced significantly.
+
 2019-05-19 v1.1.6
   - Smaller docker image size.
 
