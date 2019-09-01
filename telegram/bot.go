@@ -9,21 +9,12 @@ import (
 )
 
 func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
-	adms, err := o.bot.GetChatAdministrators(tgbotapi.ChatConfig{ChatID: msg.Chat.ID})
+	isAdm, err := o.isAdmin(msg.Chat.ID, msg.From.ID)
 	if err != nil {
 		return err
 	}
 
-	var foundAdm bool
-
-	for _, a := range adms {
-		if a.User != nil && a.User.ID == msg.From.ID {
-			foundAdm = true
-			break
-		}
-	}
-
-	if !foundAdm {
+	if !isAdm {
 		return nil
 	}
 
@@ -170,4 +161,19 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *settings.Group, error) 
 	}
 
 	return true, gr, nil
+}
+
+func (o *InstanceObj) isAdmin(chatID int64, userID int) (bool, error) {
+	adms, err := o.bot.GetChatAdministrators(tgbotapi.ChatConfig{ChatID: chatID})
+	if err != nil {
+		return false, err
+	}
+
+	for _, a := range adms {
+		if a.User != nil && a.User.ID == userID {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

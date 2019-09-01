@@ -62,6 +62,19 @@ func (o *InstanceObj) messageFromNewbie(msg *tgbotapi.Message) error {
 }
 
 func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
+	isAdm, err := o.isAdmin(msg.Chat.ID, msg.From.ID)
+	if err != nil {
+		return err
+	}
+
+	if !isAdm {
+		o.log.Debugw(
+			"Newbie added by admin, it is normal",
+			"Admin", msg.From.ID,
+		)
+		return nil
+	}
+
 	gr, err := o.sett.GetGroup(msg.Chat.ID)
 	if err != nil {
 		return err

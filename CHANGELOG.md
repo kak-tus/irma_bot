@@ -1,3 +1,6 @@
+2019-09-01 v1.1.8
+  - Skip checking newbies added by admins.
+
 2019-05-19 v1.1.7
   - Revert packing. Image size note reduced significantly.
 
