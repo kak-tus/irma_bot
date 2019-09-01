@@ -67,7 +67,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 		return err
 	}
 
-	if !isAdm {
+	if isAdm {
 		o.log.Debugw(
 			"Newbie added by admin, it is normal",
 			"Admin", msg.From.ID,
