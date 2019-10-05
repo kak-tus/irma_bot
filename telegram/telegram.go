@@ -65,6 +65,8 @@ func NewTelegram(log *zap.SugaredLogger) (*InstanceObj, error) {
 }
 
 func (o *InstanceObj) Start() error {
+	o.log.Info("Start telegram")
+
 	res, err := o.bot.SetWebhook(tgbotapi.NewWebhook(o.cnf.Telegram.URL + o.cnf.Telegram.Path))
 	if err != nil {
 		return err

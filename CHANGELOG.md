@@ -1,3 +1,6 @@
+2019-10-05 v1.2.2
+  - Improve logging.
+
 2019-10-05 v1.2.1
   - Remove vendoring.
   - Go 1.13.1.
