@@ -14,7 +14,7 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 	var toDel bool
 
 	for _, u := range *msg.NewChatMembers {
-		if len(u.FirstName) >= o.cnf.NameLimit || len(u.LastName) >= o.cnf.NameLimit {
+		if len(u.FirstName) >= o.cnf.Telegram.NameLimit || len(u.LastName) >= o.cnf.Telegram.NameLimit {
 			o.log.Infof("Ban long name: %s", u.FirstName)
 			toDel = true
 			break

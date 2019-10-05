@@ -1,31 +1,41 @@
 package main
 
 import (
-	"git.aqq.me/go/app/appconf"
-	"git.aqq.me/go/app/launcher"
-	"github.com/iph0/conf/envconf"
-	"github.com/iph0/conf/fileconf"
+	"os"
+	"os/signal"
+
 	"github.com/kak-tus/irma_bot/telegram"
+	"go.uber.org/zap"
 )
 
-func init() {
-	fileLdr := fileconf.NewLoader("etc", "/etc")
-	envLdr := envconf.NewLoader()
-
-	appconf.RegisterLoader("file", fileLdr)
-	appconf.RegisterLoader("env", envLdr)
-
-	appconf.Require("file:irma.yml")
-	appconf.Require("env:^IRMA_")
-}
-
 func main() {
-	launcher.Run(func() error {
-		err := telegram.Get().Start()
-		if err != nil {
-			return err
-		}
+	logger, err := zap.NewProduction()
+	if err != nil {
+		panic(err)
+	}
 
-		return nil
-	})
+	log := logger.Sugar()
+
+	tg, err := telegram.NewTelegram(log)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	go func() {
+		if err := tg.Start(); err != nil {
+			log.Panic(err)
+		}
+	}()
+
+	st := make(chan os.Signal, 1)
+	signal.Notify(st, os.Interrupt)
+
+	<-st
+	log.Info("Stop")
+
+	if err := tg.Stop(); err != nil {
+		log.Panic(err)
+	}
+
+	_ = log.Sync()
 }

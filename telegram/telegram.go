@@ -6,108 +6,77 @@ import (
 	"sync"
 	"time"
 
-	"git.aqq.me/go/app/appconf"
-	"git.aqq.me/go/app/applog"
-	"git.aqq.me/go/app/event"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/iph0/conf"
-	"github.com/kak-tus/irma_bot/settings"
+	"github.com/kak-tus/irma_bot/cnf"
+	"github.com/kak-tus/irma_bot/db"
 	"github.com/kak-tus/irma_bot/storage"
+	"go.uber.org/zap"
 	"golang.org/x/net/proxy"
 )
 
-var inst *InstanceObj
+func NewTelegram(log *zap.SugaredLogger) (*InstanceObj, error) {
+	c, err := cnf.NewConf()
+	if err != nil {
+		return nil, err
+	}
 
-func init() {
-	event.Init.AddHandler(
-		func() error {
-			cnfMap := appconf.GetConfig()["telegram"]
+	httpTransport := &http.Transport{}
 
-			var cnf instanceConf
-			err := conf.Decode(cnfMap, &cnf)
-			if err != nil {
-				return err
-			}
+	if c.Telegram.Proxy != "" {
+		dialer, err := proxy.SOCKS5("tcp", c.Telegram.Proxy, nil, proxy.Direct)
+		if err != nil {
+			return nil, err
+		}
 
-			httpTransport := &http.Transport{}
+		httpTransport.Dial = dialer.Dial
+	}
 
-			if cnf.Proxy != "" {
-				dialer, err := proxy.SOCKS5("tcp", cnf.Proxy, nil, proxy.Direct)
-				if err != nil {
-					return err
-				}
+	httpClient := &http.Client{Transport: httpTransport, Timeout: time.Minute}
 
-				httpTransport.Dial = dialer.Dial
-			}
+	bot, err := tgbotapi.NewBotAPIWithClient(c.Telegram.Token, httpClient)
+	if err != nil {
+		return nil, err
+	}
 
-			httpClient := &http.Client{Transport: httpTransport, Timeout: time.Minute}
+	srv := &http.Server{Addr: c.Telegram.Listen}
 
-			bot, err := tgbotapi.NewBotAPIWithClient(cnf.Token, httpClient)
-			if err != nil {
-				return err
-			}
+	db, err := db.NewDB(c, log)
+	if err != nil {
+		return nil, err
+	}
 
-			srv := &http.Server{Addr: cnf.Listen}
+	stor, err := storage.NewStorage(c, log)
+	if err != nil {
+		return nil, err
+	}
 
-			inst = &InstanceObj{
-				bot:  bot,
-				cnf:  cnf,
-				lock: &sync.WaitGroup{},
-				log:  applog.GetLogger().Sugar(),
-				sett: settings.Get(),
-				srv:  srv,
-				stop: make(chan bool, 1),
-				stor: storage.Get(),
-			}
+	inst := &InstanceObj{
+		bot:  bot,
+		cnf:  c,
+		lock: &sync.WaitGroup{},
+		log:  log,
+		db:   db,
+		srv:  srv,
+		stop: make(chan bool, 1),
+		stor: stor,
+	}
 
-			inst.log.Info("Started telegram")
-
-			return nil
-		},
-	)
-
-	event.Stop.AddHandler(
-		func() error {
-			inst.log.Info("Stop telegram")
-
-			err := inst.srv.Shutdown(nil)
-			if err != nil {
-				return err
-			}
-
-			inst.stop <- true
-			inst.lock.Wait()
-
-			inst.log.Info("Stopped telegram")
-			return nil
-		},
-	)
-}
-
-func Get() *InstanceObj {
-	return inst
+	return inst, nil
 }
 
 func (o *InstanceObj) Start() error {
-	res, err := o.bot.SetWebhook(tgbotapi.NewWebhook(o.cnf.URL + o.cnf.Path))
+	res, err := o.bot.SetWebhook(tgbotapi.NewWebhook(o.cnf.Telegram.URL + o.cnf.Telegram.Path))
 	if err != nil {
 		return err
 	}
 
 	o.log.Debug(res.Description)
 
-	upd := o.bot.ListenForWebhook("/" + o.cnf.Path)
+	upd := o.bot.ListenForWebhook("/" + o.cnf.Telegram.Path)
 
 	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "ok")
 	})
-
-	go func() {
-		err := o.srv.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			o.log.Panic(err)
-		}
-	}()
 
 	go func() {
 		for {
@@ -146,6 +115,26 @@ func (o *InstanceObj) Start() error {
 		o.lock.Done()
 	}()
 
+	err = o.srv.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		return err
+	}
+
+	return nil
+}
+
+func (o *InstanceObj) Stop() error {
+	o.log.Info("Stop telegram")
+
+	err := o.srv.Shutdown(nil)
+	if err != nil {
+		return err
+	}
+
+	o.stop <- true
+	o.lock.Wait()
+
+	o.log.Info("Stopped telegram")
 	return nil
 }
 

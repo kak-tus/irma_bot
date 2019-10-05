@@ -1,9 +1,8 @@
 module github.com/kak-tus/irma_bot
 
-go 1.12
+go 1.13
 
 require (
-	git.aqq.me/go/app v1.7.1
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/Masterminds/squirrel v1.1.0
 	github.com/cockroachdb/apd v1.1.0 // indirect

@@ -1,3 +1,8 @@
+2019-10-05 v1.2.1
+  - Remove vendoring.
+  - Go 1.13.1.
+  - Remove private dependency (app).
+
 2019-09-01 v1.1.8
   - Skip checking newbies added by admins.
 

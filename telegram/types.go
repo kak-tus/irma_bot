@@ -5,51 +5,19 @@ import (
 	"sync"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/kak-tus/irma_bot/settings"
+	"github.com/kak-tus/irma_bot/cnf"
+	"github.com/kak-tus/irma_bot/db"
 	"github.com/kak-tus/irma_bot/storage"
 	"go.uber.org/zap"
 )
 
 type InstanceObj struct {
 	bot  *tgbotapi.BotAPI
-	cnf  instanceConf
+	cnf  *cnf.Cnf
 	lock *sync.WaitGroup
 	log  *zap.SugaredLogger
-	sett *settings.InstanceObj
+	db   *db.InstanceObj
 	srv  *http.Server
 	stop chan bool
 	stor *storage.InstanceObj
-}
-
-type instanceConf struct {
-	BotName          string
-	DefaultGreeting  string
-	DefaultQuestions []settings.Question
-	Limits           limConf
-	Listen           string
-	NameLimit        int
-	Path             string
-	Proxy            string
-	Texts            textsConf
-	Token            string
-	URL              string
-}
-
-type textsConf struct {
-	Commands map[string]command
-	Fail     string
-	Set      string
-	Usage    string
-}
-
-type command struct {
-	Field string
-	Text  string
-	Value bool
-}
-
-type limConf struct {
-	Answer   int
-	Greeting int
-	Question int
 }

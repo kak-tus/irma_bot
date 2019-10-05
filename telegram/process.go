@@ -23,7 +23,7 @@ func (o *InstanceObj) process(msg tgbotapi.Update) error {
 
 func (o *InstanceObj) processMsg(msg *tgbotapi.Message) error {
 	if msg.Chat.IsPrivate() {
-		resp := tgbotapi.NewMessage(msg.Chat.ID, o.cnf.Texts.Usage)
+		resp := tgbotapi.NewMessage(msg.Chat.ID, o.cnf.Telegram.Texts.Usage)
 		_, err := o.bot.Send(resp)
 		if err != nil {
 			return err
@@ -87,7 +87,7 @@ func (o *InstanceObj) processMsg(msg *tgbotapi.Message) error {
 		return o.newMembers(msg)
 	}
 
-	name := fmt.Sprintf("@%s", o.cnf.BotName)
+	name := fmt.Sprintf("@%s", o.cnf.Telegram.BotName)
 
 	if strings.HasPrefix(msg.Text, name) {
 		return o.messageToBot(msg)
@@ -117,7 +117,7 @@ func (o *InstanceObj) processCallback(msg *tgbotapi.CallbackQuery) error {
 		return nil
 	}
 
-	gr, err := o.sett.GetGroup(chatID)
+	gr, err := o.db.GetGroup(chatID)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (o *InstanceObj) processCallback(msg *tgbotapi.CallbackQuery) error {
 		return err
 	}
 
-	quest := o.cnf.DefaultQuestions
+	quest := o.cnf.Telegram.DefaultQuestions
 	if gr != nil && len(gr.Questions) != 0 {
 		quest = gr.Questions
 	}

@@ -1,18 +1,18 @@
-FROM golang:1.12.2-alpine3.9 AS build
+FROM golang:1.13.1-alpine3.10 AS build
 
 WORKDIR /go/irma_bot
 
+COPY db ./db
 COPY go.mod .
 COPY go.sum .
 COPY main.go .
-COPY settings ./settings
 COPY storage ./storage
 COPY telegram ./telegram
-COPY vendor ./vendor
+COPY cnf ./cnf
 
-RUN go build -mod=vendor -o /go/bin/irma_bot
+RUN go build -o /go/bin/irma_bot
 
-FROM alpine:3.9
+FROM alpine:3.10
 
 COPY --from=build /go/bin/irma_bot /usr/local/bin/irma_bot
 COPY etc /etc/

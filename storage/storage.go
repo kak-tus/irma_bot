@@ -4,76 +4,53 @@ import (
 	"strings"
 	"time"
 
-	"git.aqq.me/go/app/appconf"
-	"git.aqq.me/go/app/applog"
-	"git.aqq.me/go/app/event"
 	"github.com/go-redis/redis"
-	"github.com/iph0/conf"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kak-tus/irma_bot/cnf"
+	"go.uber.org/zap"
 )
 
-var inst *InstanceObj
+func NewStorage(c *cnf.Cnf, log *zap.SugaredLogger) (*InstanceObj, error) {
+	addrs := strings.Split(c.Storage.RedisAddrs, ",")
 
-func init() {
-	event.Init.AddHandler(
-		func() error {
-			cnfMap := appconf.GetConfig()["storage"]
+	var parsed []string
+	var pass string
 
-			var cnf instanceConf
-			err := conf.Decode(cnfMap, &cnf)
-			if err != nil {
-				return err
-			}
+	for _, a := range addrs {
+		opt, err := redis.ParseURL(a)
 
-			addrs := strings.Split(cnf.RedisAddrs, ",")
+		if err == nil {
+			parsed = append(parsed, opt.Addr)
+			pass = opt.Password
+		}
+	}
 
-			var parsed []string
-			var pass string
+	rdb := redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs:        parsed,
+		Password:     pass,
+		ReadTimeout:  time.Minute,
+		WriteTimeout: time.Minute,
+	})
 
-			for _, a := range addrs {
-				opt, err := redis.ParseURL(a)
+	inst := &InstanceObj{
+		cnf: c,
+		enc: jsoniter.Config{UseNumber: true}.Froze(),
+		log: log,
+		rdb: rdb,
+	}
 
-				if err == nil {
-					parsed = append(parsed, opt.Addr)
-					pass = opt.Password
-				}
-			}
-
-			rdb := redis.NewClusterClient(&redis.ClusterOptions{
-				Addrs:        parsed,
-				Password:     pass,
-				ReadTimeout:  time.Minute,
-				WriteTimeout: time.Minute,
-			})
-
-			inst = &InstanceObj{
-				cnf: cnf,
-				enc: jsoniter.Config{UseNumber: true}.Froze(),
-				log: applog.GetLogger().Sugar(),
-				rdb: rdb,
-			}
-
-			inst.log.Info("Started storage")
-
-			return nil
-		},
-	)
-
-	event.Stop.AddHandler(
-		func() error {
-			inst.log.Info("Stop storage")
-
-			err := inst.rdb.Close()
-			if err != nil {
-				return err
-			}
-
-			inst.log.Info("Stopped storage")
-			return nil
-		},
-	)
+	return inst, nil
 }
 
-func Get() *InstanceObj {
-	return inst
+func (o *InstanceObj) Stop() error {
+	o.log.Info("Stop storage")
+
+	err := o.rdb.Close()
+	if err != nil {
+		return err
+	}
+
+	o.log.Info("Stopped storage")
+
+	return nil
 }

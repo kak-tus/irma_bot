@@ -5,7 +5,8 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jackc/pgx/pgtype"
-	"github.com/kak-tus/irma_bot/settings"
+	"github.com/kak-tus/irma_bot/cnf"
+	"github.com/kak-tus/irma_bot/db"
 )
 
 func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
@@ -18,14 +19,14 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 		return nil
 	}
 
-	for k, v := range o.cnf.Texts.Commands {
+	for k, v := range o.cnf.Telegram.Texts.Commands {
 		if !strings.Contains(msg.Text, k) {
 			continue
 		}
 
 		o.log.Debugf("Command %s", k)
 
-		err := o.sett.CreateGroup(msg.Chat.ID, map[string]interface{}{v.Field: v.Value})
+		err := o.db.CreateGroup(msg.Chat.ID, map[string]interface{}{v.Field: v.Value})
 		if err != nil {
 			return err
 		}
@@ -48,9 +49,9 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 	var resp tgbotapi.MessageConfig
 
 	if !parsed {
-		resp = tgbotapi.NewMessage(msg.Chat.ID, o.cnf.Texts.Fail)
+		resp = tgbotapi.NewMessage(msg.Chat.ID, o.cnf.Telegram.Texts.Fail)
 	} else {
-		resp = tgbotapi.NewMessage(msg.Chat.ID, o.cnf.Texts.Set)
+		resp = tgbotapi.NewMessage(msg.Chat.ID, o.cnf.Telegram.Texts.Set)
 	}
 
 	_, err = o.bot.Send(resp)
@@ -67,7 +68,7 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 		"questions": gr.Questions,
 	}
 
-	err = o.sett.CreateGroup(msg.Chat.ID, toCr)
+	err = o.db.CreateGroup(msg.Chat.ID, toCr)
 	if err != nil {
 		return err
 	}
@@ -75,9 +76,9 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 	return nil
 }
 
-func (o *InstanceObj) parseQuestions(txt string) (bool, *settings.Group, error) {
+func (o *InstanceObj) parseQuestions(txt string) (bool, *db.Group, error) {
 	// @ + name + " "
-	l := 1 + len(o.cnf.BotName) + 1
+	l := 1 + len(o.cnf.Telegram.BotName) + 1
 
 	if len(txt) <= l {
 		return false, nil, nil
@@ -86,7 +87,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *settings.Group, error) 
 	txt = txt[l:]
 
 	var greeting string
-	qst := make([]settings.Question, 0)
+	qst := make([]cnf.Question, 0)
 
 	lines := strings.Split(txt, "\n")
 	for _, ln := range lines {
@@ -100,7 +101,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *settings.Group, error) 
 			question := strings.TrimSpace(ln[:pos])
 			answers := ln[pos+1:]
 
-			if len(question) > o.cnf.Limits.Question {
+			if len(question) > o.cnf.Telegram.Limits.Question {
 				continue
 			}
 
@@ -109,24 +110,24 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *settings.Group, error) 
 				continue
 			}
 
-			answParsed := make([]settings.Answer, 0, len(answ))
+			answParsed := make([]cnf.Answer, 0, len(answ))
 			var hasCorrect bool
 
 			for _, a := range answ {
-				if len(a) > o.cnf.Limits.Answer {
+				if len(a) > o.cnf.Telegram.Limits.Answer {
 					continue
 				}
 
 				if strings.HasPrefix(a, "+") {
 					if len(a) > 1 {
 						hasCorrect = true
-						answParsed = append(answParsed, settings.Answer{
+						answParsed = append(answParsed, cnf.Answer{
 							Correct: 1,
 							Text:    strings.TrimSpace(a[1:]),
 						})
 					}
 				} else {
-					answParsed = append(answParsed, settings.Answer{
+					answParsed = append(answParsed, cnf.Answer{
 						Text: strings.TrimSpace(a),
 					})
 				}
@@ -140,7 +141,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *settings.Group, error) 
 				continue
 			}
 
-			q := settings.Question{
+			q := cnf.Question{
 				Answers: answParsed,
 				Text:    question,
 			}
@@ -151,11 +152,11 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *settings.Group, error) 
 		}
 	}
 
-	if greeting == "" || len(greeting) > o.cnf.Limits.Greeting || len(qst) == 0 {
+	if greeting == "" || len(greeting) > o.cnf.Telegram.Limits.Greeting || len(qst) == 0 {
 		return false, nil, nil
 	}
 
-	gr := &settings.Group{
+	gr := &db.Group{
 		Greeting:  pgtype.Varchar{String: greeting, Status: pgtype.Present},
 		Questions: qst,
 	}

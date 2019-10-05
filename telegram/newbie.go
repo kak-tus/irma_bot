@@ -75,7 +75,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 		return nil
 	}
 
-	gr, err := o.sett.GetGroup(msg.Chat.ID)
+	gr, err := o.db.GetGroup(msg.Chat.ID)
 	if err != nil {
 		return err
 	}
@@ -94,8 +94,8 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 		return nil
 	}
 
-	quest := o.cnf.DefaultQuestions
-	greet := o.cnf.DefaultGreeting
+	quest := o.cnf.Telegram.DefaultQuestions
+	greet := o.cnf.Telegram.DefaultGreeting
 
 	if gr != nil && len(gr.Questions) != 0 {
 		quest = gr.Questions
