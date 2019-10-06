@@ -1,3 +1,6 @@
+2019-10-06 v1.2.3
+  - Improve logging.
+
 2019-10-05 v1.2.2
   - Improve logging.
 

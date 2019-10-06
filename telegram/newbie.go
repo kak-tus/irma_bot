@@ -39,7 +39,10 @@ func (o *InstanceObj) messageFromNewbie(msg *tgbotapi.Message) error {
 		return o.stor.AddNewbieMessages(msg.Chat.ID, msg.From.ID)
 	}
 
-	o.log.Infof("Restricted message from user: %s", msg.From.FirstName)
+	o.log.Info("Restricted message",
+		"User", msg.From.FirstName,
+		"Chat", msg.Chat.ID,
+	)
 
 	kick := tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: tgbotapi.ChatMemberConfig{
@@ -82,7 +85,11 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 
 	if gr == nil || gr.BanURL.Bool {
 		for _, m := range *msg.NewChatMembers {
-			o.log.Infof("Newbie found, add messages: %s", m.FirstName)
+			o.log.Info("Newbie found, add messages",
+				"User", m.FirstName,
+				"Chat", msg.Chat.ID,
+			)
+
 			err := o.stor.AddNewbieMessages(msg.Chat.ID, m.ID)
 			if err != nil {
 				return err
@@ -105,7 +112,10 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 	}
 
 	for _, m := range *msg.NewChatMembers {
-		o.log.Infof("Newbie found, send question: %s", m.FirstName)
+		o.log.Info("Newbie found, send question",
+			"User", m.FirstName,
+			"Chat", msg.Chat.ID,
+		)
 
 		qID := rand.Intn(len(quest))
 

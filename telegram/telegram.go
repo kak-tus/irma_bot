@@ -146,7 +146,10 @@ func (o *InstanceObj) deleteMessage(chatID int64, messageID int) error {
 	if _, err := o.bot.DeleteMessage(del); err != nil {
 		ex, ok := err.(tgbotapi.Error)
 		if ok && ex.Message == "Bad Request: message to delete not found" {
-			o.log.Debug("Message in chat %d with id is already deleted", chatID, messageID)
+			o.log.Warn("Message in chat is already deleted",
+				"Chat", chatID,
+				"Message", messageID,
+			)
 		} else {
 			return err
 		}
