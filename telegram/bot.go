@@ -24,7 +24,7 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 			continue
 		}
 
-		o.log.Debugf("Command %s", k)
+		o.log.Infof("Command %s", k)
 
 		err := o.db.CreateGroup(msg.Chat.ID, map[string]interface{}{v.Field: v.Value})
 		if err != nil {

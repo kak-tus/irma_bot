@@ -72,7 +72,7 @@ func (o *InstanceObj) Start() error {
 		return err
 	}
 
-	o.log.Debug(res.Description)
+	o.log.Info(res.Description)
 
 	upd := o.bot.ListenForWebhook("/" + o.cnf.Telegram.Path)
 
@@ -146,7 +146,7 @@ func (o *InstanceObj) deleteMessage(chatID int64, messageID int) error {
 	if _, err := o.bot.DeleteMessage(del); err != nil {
 		ex, ok := err.(tgbotapi.Error)
 		if ok && ex.Message == "Bad Request: message to delete not found" {
-			o.log.Warn("Message in chat is already deleted",
+			o.log.Warnw("Message in chat is already deleted",
 				"Chat", chatID,
 				"Message", messageID,
 			)

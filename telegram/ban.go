@@ -15,7 +15,7 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 
 	for _, u := range *msg.NewChatMembers {
 		if len(u.FirstName) >= o.cnf.Telegram.NameLimit || len(u.LastName) >= o.cnf.Telegram.NameLimit {
-			o.log.Info("Ban long name",
+			o.log.Infow("Ban long name",
 				"User", u.FirstName,
 				"Chat", msg.Chat.ID,
 			)
@@ -61,7 +61,7 @@ func (o *InstanceObj) banKickPool(msg *tgbotapi.Message) (bool, error) {
 		return false, err
 	}
 
-	o.log.Info("User found in kick pool",
+	o.log.Infow("User found in kick pool",
 		"User", msg.From.FirstName,
 		"Chat", msg.Chat.ID,
 	)

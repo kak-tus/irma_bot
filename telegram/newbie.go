@@ -39,7 +39,7 @@ func (o *InstanceObj) messageFromNewbie(msg *tgbotapi.Message) error {
 		return o.stor.AddNewbieMessages(msg.Chat.ID, msg.From.ID)
 	}
 
-	o.log.Info("Restricted message",
+	o.log.Infow("Restricted message",
 		"User", msg.From.FirstName,
 		"Chat", msg.Chat.ID,
 	)
@@ -71,7 +71,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 	}
 
 	if isAdm {
-		o.log.Debugw(
+		o.log.Infow(
 			"Newbie added by admin, it is normal",
 			"Admin", msg.From.ID,
 		)
@@ -85,7 +85,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 
 	if gr == nil || gr.BanURL.Bool {
 		for _, m := range *msg.NewChatMembers {
-			o.log.Info("Newbie found, add messages",
+			o.log.Infow("Newbie found, add messages",
 				"User", m.FirstName,
 				"Chat", msg.Chat.ID,
 			)
@@ -112,7 +112,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 	}
 
 	for _, m := range *msg.NewChatMembers {
-		o.log.Info("Newbie found, send question",
+		o.log.Infow("Newbie found, send question",
 			"User", m.FirstName,
 			"Chat", msg.Chat.ID,
 		)
