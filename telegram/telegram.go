@@ -1,7 +1,10 @@
 package telegram
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -28,7 +31,23 @@ func NewTelegram(log *zap.SugaredLogger) (*InstanceObj, error) {
 			return nil, err
 		}
 
-		httpTransport.Dial = dialer.Dial
+		httpTransport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			done := make(chan bool)
+			var con net.Conn
+			var err error
+
+			go func() {
+				con, err = dialer.Dial(network, addr)
+				done <- true
+			}()
+
+			select {
+			case <-ctx.Done():
+				return nil, errors.New("Dial timeout")
+			case <-done:
+				return con, err
+			}
+		}
 	}
 
 	httpClient := &http.Client{Transport: httpTransport, Timeout: time.Minute}
@@ -128,7 +147,7 @@ func (o *InstanceObj) Start() error {
 func (o *InstanceObj) Stop() error {
 	o.log.Info("Stop telegram")
 
-	err := o.srv.Shutdown(nil)
+	err := o.srv.Shutdown(context.TODO())
 	if err != nil {
 		return err
 	}
