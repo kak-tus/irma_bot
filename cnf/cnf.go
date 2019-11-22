@@ -16,7 +16,7 @@ type Tg struct {
 	BotName          string
 	DefaultGreeting  string
 	DefaultQuestions []Question
-	Limits           limConf
+	Limits           LimitsConf
 	Listen           string
 	NameLimit        int
 	Path             string
@@ -33,7 +33,7 @@ type textsConf struct {
 	Usage    string
 }
 
-type limConf struct {
+type LimitsConf struct {
 	Answer   int
 	Greeting int
 	Question int

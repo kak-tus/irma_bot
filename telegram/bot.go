@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/jackc/pgx/pgtype"
 	"github.com/kak-tus/irma_bot/cnf"
 	"github.com/kak-tus/irma_bot/db"
 )
@@ -78,18 +77,21 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 
 func (o *InstanceObj) parseQuestions(txt string) (bool, *db.Group, error) {
 	// @ + name + " "
+	// @ + name + "\n"
 	l := 1 + len(o.cnf.Telegram.BotName) + 1
 
 	if len(txt) <= l {
 		return false, nil, nil
 	}
 
+	// Cut bot name
 	txt = txt[l:]
 
 	var greeting string
-	qst := make([]cnf.Question, 0)
+	questions := make([]cnf.Question, 0)
 
 	lines := strings.Split(txt, "\n")
+
 	for _, ln := range lines {
 		if strings.Contains(ln, "?") && strings.Contains(ln, ";") && strings.Contains(ln, "+") {
 			pos := strings.Index(ln, "?")
@@ -146,19 +148,19 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *db.Group, error) {
 				Text:    question,
 			}
 
-			qst = append(qst, q)
+			questions = append(questions, q)
 		} else {
 			greeting += strings.TrimSpace(ln) + "\n"
 		}
 	}
 
-	if greeting == "" || len(greeting) > o.cnf.Telegram.Limits.Greeting || len(qst) == 0 {
+	if greeting == "" || len(greeting) > o.cnf.Telegram.Limits.Greeting || len(questions) == 0 {
 		return false, nil, nil
 	}
 
 	gr := &db.Group{
-		Greeting:  pgtype.Varchar{String: greeting, Status: pgtype.Present},
-		Questions: qst,
+		Greeting:  &greeting,
+		Questions: questions,
 	}
 
 	return true, gr, nil

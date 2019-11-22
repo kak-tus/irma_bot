@@ -6,7 +6,6 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/jackc/pgx/pgtype"
 	"github.com/kak-tus/irma_bot/storage"
 )
 
@@ -83,7 +82,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 		return err
 	}
 
-	if gr == nil || gr.BanURL.Bool {
+	if gr == nil || (gr.BanURL != nil && *gr.BanURL) {
 		for _, m := range *msg.NewChatMembers {
 			o.log.Infow("Newbie found, add messages",
 				"User", m.FirstName,
@@ -97,7 +96,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 		}
 	}
 
-	if gr != nil && gr.BanQuestion.Status == pgtype.Present && gr.BanQuestion.Bool == false {
+	if gr == nil || gr.BanQuestion == nil || !*gr.BanQuestion {
 		return nil
 	}
 
@@ -107,8 +106,8 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 	if gr != nil && len(gr.Questions) != 0 {
 		quest = gr.Questions
 	}
-	if gr != nil && gr.Greeting.String != "" {
-		greet = gr.Greeting.String
+	if gr != nil && gr.Greeting != nil && *gr.Greeting != "" {
+		greet = *gr.Greeting
 	}
 
 	for _, m := range *msg.NewChatMembers {

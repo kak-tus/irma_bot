@@ -1,4 +1,4 @@
-FROM golang:1.13.1-alpine3.10 AS build
+FROM golang:1.13.2-alpine3.10 AS build
 
 WORKDIR /go/irma_bot
 
@@ -10,7 +10,7 @@ COPY storage ./storage
 COPY telegram ./telegram
 COPY cnf ./cnf
 
-RUN go build -o /go/bin/irma_bot
+RUN go test && go build -o /go/bin/irma_bot
 
 FROM alpine:3.10
 

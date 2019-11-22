@@ -8,14 +8,13 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx"
-	"github.com/jackc/pgx/pgtype"
 	"github.com/kak-tus/irma_bot/cnf"
 )
 
 type Group struct {
-	BanQuestion pgtype.Bool
-	BanURL      pgtype.Bool
-	Greeting    pgtype.Varchar
+	BanQuestion *bool
+	BanURL      *bool
+	Greeting    *string
 	Questions   []cnf.Question
 }
 
