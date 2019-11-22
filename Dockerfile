@@ -10,6 +10,8 @@ COPY storage ./storage
 COPY telegram ./telegram
 COPY cnf ./cnf
 
+ENV CGO_ENABLED=0
+
 RUN go test && go build -o /go/bin/irma_bot
 
 FROM alpine:3.10
