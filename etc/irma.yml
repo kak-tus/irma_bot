@@ -48,7 +48,7 @@ irma:
         By default bot uses URL protection: if newbie user send URL or forward message - bot kicks user.
         You can disable or enable this protection by sending to bot:
 
-        @${IRMA_BOT_NAME} ban_url
+        @${IRMA_BOT_NAME} use_ban_url
 
         or
 
@@ -67,7 +67,7 @@ irma:
 
         Disable or enable this by
 
-        @${IRMA_BOT_NAME} ban_question
+        @${IRMA_BOT_NAME} use_ban_question
 
         or
 
@@ -83,7 +83,10 @@ irma:
         Greeting, questions and answers has length limit.
         Greeting - ${..limits.greeting} characters, question - ${..limits.question}, answer - ${..limits.answer}.
       commands:
-        ban_url:
+        # Commands to bot must have fully unique names
+        # In case of one command is part of other command - can be error while
+        # command resolving
+        use_ban_url:
           text: |
             URLs protection enabled
             Send me "no_ban_url" to disable
@@ -92,10 +95,10 @@ irma:
         no_ban_url:
           text: |
             URLs protection disabled
-            Send me "ban_url" to enable
+            Send me "use_ban_url" to enable
           field: ban_url
           value: false
-        ban_question:
+        use_ban_question:
           text: |
             Questions protection enabled
             Send me "no_ban_question" to disable
@@ -104,7 +107,7 @@ irma:
         no_ban_question:
           text: |
             Questions protection disabled
-            Send me "ban_question" to enable
+            Send me "use_ban_question" to enable
           field: ban_question
           value: false
 

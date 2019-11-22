@@ -1,3 +1,6 @@
+2019-11-22 v1.2.5
+  - Fixed bug with error while disabling protection.
+
 2019-10-06 v1.2.4
   - Fixed logging.
 
