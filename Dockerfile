@@ -1,4 +1,4 @@
-FROM golang:1.13.2-alpine3.10 AS build
+FROM golang:1.15.2-alpine3.12 AS build
 
 WORKDIR /go/irma_bot
 
@@ -14,7 +14,7 @@ ENV CGO_ENABLED=0
 
 RUN go test && go build -o /go/bin/irma_bot
 
-FROM alpine:3.10
+FROM alpine:3.12
 
 COPY --from=build /go/bin/irma_bot /usr/local/bin/irma_bot
 COPY etc /etc/

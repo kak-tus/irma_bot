@@ -1,3 +1,6 @@
+2020-10-09 v1.3.0
+  - Go 1.15.
+
 2019-11-23 v1.2.5
   - Fixed bug with error while disabling protection.
   - Fixed bug with save question settings.
