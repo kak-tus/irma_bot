@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx"
@@ -13,6 +14,7 @@ import (
 
 type Group struct {
 	BanQuestion *bool
+	BanTimeout  *time.Duration
 	BanURL      *bool
 	Greeting    *string
 	Questions   []cnf.Question
@@ -24,6 +26,7 @@ func (o *InstanceObj) GetGroup(id int64) (*Group, error) {
 		"ban_url",
 		"greeting",
 		"questions",
+		"ban_timeout",
 	).
 		From("public.groups").Where(sq.Eq{"id": id}).ToSql()
 	if err != nil {
@@ -43,12 +46,20 @@ func (o *InstanceObj) GetGroup(id int64) (*Group, error) {
 
 	gr := &Group{}
 
+	var timeout int
+
 	err = tx.QueryRow(sql, args...).Scan(
 		&gr.BanQuestion,
 		&gr.BanURL,
 		&gr.Greeting,
 		&gr.Questions,
+		&timeout,
 	)
+
+	if timeout > 0 {
+		dur := time.Duration(timeout) * time.Minute
+		gr.BanTimeout = &dur
+	}
 
 	if err != nil && err == pgx.ErrNoRows {
 		return nil, nil

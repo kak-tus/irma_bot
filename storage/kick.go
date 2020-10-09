@@ -20,10 +20,10 @@ func (o *InstanceObj) IsKicked(chatID int64, userID int) (bool, error) {
 	return true, nil
 }
 
-func (o *InstanceObj) SetKicked(chatID int64, userID int) error {
+func (o *InstanceObj) SetKicked(chatID int64, userID int, ttl time.Duration) error {
 	key := fmt.Sprintf("irma_kick_{%d_%d}", chatID, userID)
 
-	_, err := o.rdb.Set(key, 1, time.Minute*5).Result()
+	_, err := o.rdb.Set(key, 1, ttl*2).Result()
 	if err != nil {
 		return err
 	}

@@ -35,11 +35,11 @@ func TestParseQuestions(t *testing.T) {
 	assert.Equal(t, &db.Group{
 		Greeting: &greet,
 		Questions: []cnf.Question{
-			cnf.Question{
+			{
 				Answers: []cnf.Answer{
-					cnf.Answer{Correct: 1, Text: "Белград"},
-					cnf.Answer{Correct: 0, Text: "Рашка"},
-					cnf.Answer{Correct: 0, Text: "Сараево"},
+					{Correct: 1, Text: "Белград"},
+					{Correct: 0, Text: "Рашка"},
+					{Correct: 0, Text: "Сараево"},
 				},
 				Text: "Столица Сербии",
 			},

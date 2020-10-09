@@ -1,5 +1,6 @@
-2020-10-09 v1.3.0
+2020-10-10 v1.3.0
   - Go 1.15.
+  - Support for custom ban timeout per group.
 
 2019-11-23 v1.2.5
   - Fixed bug with error while disabling protection.

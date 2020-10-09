@@ -7,6 +7,7 @@ irma:
     proxy: '${IRMA_TELEGRAM_PROXY}'
     botName : '${IRMA_BOT_NAME}'
     nameLimit: 100
+    defaultBanTimeout: 1m
     limits:
       greeting: 1000
       question: 100
@@ -73,6 +74,14 @@ irma:
 
         @${IRMA_BOT_NAME} no_ban_question
 
+        To setup wait time before ban user send
+
+        @${IRMA_BOT_NAME} set_ban_timeout <timeout in minutes from 1 to 60>
+
+        as example
+
+        @${IRMA_BOT_NAME} set_ban_timeout 5
+
         https://github.com/kak-tus/irma_bot
       set: AntiSpam protection enabled
       fail: |
@@ -110,6 +119,13 @@ irma:
             Send me "use_ban_question" to enable
           field: ban_question
           value: false
+        set_ban_timeout:
+          text: |
+            Ban timeout setuped
+          field: ban_timeout
+          valueFromText: true
+          minimum: 1
+          maximum: 60
 
   storage:
     redisAddrs: '${IRMA_REDIS_ADDRS}'

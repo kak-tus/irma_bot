@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"strconv"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -25,7 +26,30 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 
 		o.log.Infof("Command %s", k)
 
-		err := o.db.CreateGroup(msg.Chat.ID, map[string]interface{}{v.Field: v.Value})
+		var val interface{}
+
+		if v.ValueFromText {
+			idx := strings.Index(msg.Text, k)
+
+			// already checked on contains
+			toParse := strings.TrimSpace(msg.Text[idx+len(k):])
+
+			parsed, err := strconv.Atoi(toParse)
+			if err != nil {
+				o.log.Debugf("parse of %s failed with %v", toParse, err)
+				continue
+			}
+
+			if parsed < v.Minimum || parsed > v.Maximum {
+				continue
+			}
+
+			val = parsed
+		} else {
+			val = v.Value
+		}
+
+		err := o.db.CreateGroup(msg.Chat.ID, map[string]interface{}{v.Field: val})
 		if err != nil {
 			return err
 		}

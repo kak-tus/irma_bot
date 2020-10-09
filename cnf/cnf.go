@@ -1,6 +1,8 @@
 package cnf
 
 import (
+	"time"
+
 	"github.com/iph0/conf"
 	"github.com/iph0/conf/envconf"
 	"github.com/iph0/conf/fileconf"
@@ -13,17 +15,19 @@ type Cnf struct {
 }
 
 type Tg struct {
-	BotName          string
-	DefaultGreeting  string
-	DefaultQuestions []Question
-	Limits           LimitsConf
-	Listen           string
-	NameLimit        int
-	Path             string
-	Proxy            string
-	Texts            textsConf
-	Token            string
-	URL              string
+	BotName                 string
+	DefaultBanTimeout       string
+	DefaultBanTimeoutParsed time.Duration
+	DefaultGreeting         string
+	DefaultQuestions        []Question
+	Limits                  LimitsConf
+	Listen                  string
+	NameLimit               int
+	Path                    string
+	Proxy                   string
+	Texts                   textsConf
+	Token                   string
+	URL                     string
 }
 
 type textsConf struct {
@@ -54,9 +58,12 @@ type DB struct {
 }
 
 type Command struct {
-	Field string
-	Text  string
-	Value bool
+	Field         string
+	Maximum       int
+	Minimum       int
+	Text          string
+	Value         bool
+	ValueFromText bool
 }
 
 type Stor struct {
@@ -87,6 +94,11 @@ func NewConf() (*Cnf, error) {
 
 	var cnf Cnf
 	if err := conf.Decode(configRaw["irma"], &cnf); err != nil {
+		return nil, err
+	}
+
+	cnf.Telegram.DefaultBanTimeoutParsed, err = time.ParseDuration(cnf.Telegram.DefaultBanTimeout)
+	if err != nil {
 		return nil, err
 	}
 

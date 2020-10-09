@@ -147,17 +147,22 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 			return err
 		}
 
+		banTimeout := o.cnf.Telegram.DefaultBanTimeoutParsed
+		if gr != nil && gr.BanTimeout != nil {
+			banTimeout = *gr.BanTimeout
+		}
+
 		act := storage.Action{
 			ChatID:    res.Chat.ID,
 			Type:      "del",
 			MessageID: res.MessageID,
 			UserID:    m.ID,
 		}
-		if err := o.stor.AddToActionPool(act, time.Minute); err != nil {
+		if err := o.stor.AddToActionPool(act, banTimeout); err != nil {
 			return err
 		}
 
-		err = o.stor.SetKicked(msg.Chat.ID, m.ID)
+		err = o.stor.SetKicked(msg.Chat.ID, m.ID, banTimeout)
 		if err != nil {
 			return err
 		}
@@ -168,7 +173,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 			MessageID: msg.MessageID,
 			UserID:    m.ID,
 		}
-		if err := o.stor.AddToActionPool(act, time.Minute); err != nil {
+		if err := o.stor.AddToActionPool(act, banTimeout); err != nil {
 			return err
 		}
 
@@ -177,7 +182,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 			Type:   "kick",
 			UserID: m.ID,
 		}
-		if err := o.stor.AddToActionPool(act, time.Minute); err != nil {
+		if err := o.stor.AddToActionPool(act, banTimeout); err != nil {
 			return err
 		}
 	}
