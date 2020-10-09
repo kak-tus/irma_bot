@@ -46,7 +46,7 @@ func (o *InstanceObj) GetGroup(id int64) (*Group, error) {
 
 	gr := &Group{}
 
-	var timeout int
+	var timeout *int
 
 	err = tx.QueryRow(sql, args...).Scan(
 		&gr.BanQuestion,
@@ -56,15 +56,15 @@ func (o *InstanceObj) GetGroup(id int64) (*Group, error) {
 		&timeout,
 	)
 
-	if timeout > 0 {
-		dur := time.Duration(timeout) * time.Minute
-		gr.BanTimeout = &dur
-	}
-
 	if err != nil && err == pgx.ErrNoRows {
 		return nil, nil
 	} else if err != nil {
 		return nil, err
+	}
+
+	if timeout != nil && *timeout > 0 {
+		dur := time.Duration(*timeout) * time.Minute
+		gr.BanTimeout = &dur
 	}
 
 	return gr, nil

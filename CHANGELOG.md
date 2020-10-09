@@ -1,3 +1,6 @@
+2020-10-10 v1.3.1
+  - Select from db fix.
+
 2020-10-10 v1.3.0
   - Go 1.15.
   - Support for custom ban timeout per group.
