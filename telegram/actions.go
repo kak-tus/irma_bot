@@ -8,7 +8,7 @@ import (
 )
 
 func (o *InstanceObj) processActions() error {
-	ctx, cancel := context.WithTimeout(nil, time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	acts, err := o.stor.GetFromActionPool(ctx)

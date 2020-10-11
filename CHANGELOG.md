@@ -1,3 +1,6 @@
+2020-10-11 v1.3.3
+  - Fix start.
+
 2020-10-11 v1.3.2
   - Update all dependencies.
   - Ban for video.

@@ -103,7 +103,7 @@ func (o *InstanceObj) Start() error {
 		for {
 			msg := <-upd
 
-			ctx, cancel := context.WithTimeout(nil, time.Minute)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
 			err := o.process(ctx, msg)
 			if err != nil {
