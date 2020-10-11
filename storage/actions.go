@@ -1,10 +1,11 @@
 package storage
 
 import (
+	"context"
 	"strconv"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 )
 
 type Action struct {
@@ -14,7 +15,7 @@ type Action struct {
 	UserID    int
 }
 
-func (o *InstanceObj) AddToActionPool(act Action, delay time.Duration) error {
+func (o *InstanceObj) AddToActionPool(ctx context.Context, act Action, delay time.Duration) error {
 	val, err := o.enc.MarshalToString(act)
 	if err != nil {
 		return err
@@ -27,7 +28,7 @@ func (o *InstanceObj) AddToActionPool(act Action, delay time.Duration) error {
 		Score:  float64(sc),
 	}
 
-	_, err = o.rdb.ZAdd("irma_kick_pool", z).Result()
+	_, err = o.rdb.ZAdd(ctx, "irma_kick_pool", &z).Result()
 	if err != nil {
 		return err
 	}
@@ -35,7 +36,7 @@ func (o *InstanceObj) AddToActionPool(act Action, delay time.Duration) error {
 	return nil
 }
 
-func (o *InstanceObj) GetFromActionPool() ([]Action, error) {
+func (o *InstanceObj) GetFromActionPool(ctx context.Context) ([]Action, error) {
 	sc := time.Now().In(time.UTC).Unix()
 
 	pool := o.rdb.TxPipeline()
@@ -45,10 +46,10 @@ func (o *InstanceObj) GetFromActionPool() ([]Action, error) {
 		Min: "0",
 	}
 
-	rangeCmd := pool.ZRangeByScore("irma_kick_pool", z)
-	_ = pool.ZRemRangeByScore("irma_kick_pool", z.Min, z.Max)
+	rangeCmd := pool.ZRangeByScore(ctx, "irma_kick_pool", &z)
+	_ = pool.ZRemRangeByScore(ctx, "irma_kick_pool", z.Min, z.Max)
 
-	_, err := pool.Exec()
+	_, err := pool.Exec(ctx)
 	if err != nil {
 		return nil, err
 	}

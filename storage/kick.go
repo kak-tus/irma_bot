@@ -1,14 +1,15 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
 
-func (o *InstanceObj) IsKicked(chatID int64, userID int) (bool, error) {
+func (o *InstanceObj) IsKicked(ctx context.Context, chatID int64, userID int) (bool, error) {
 	k := fmt.Sprintf("irma_kick_{%d_%d}", chatID, userID)
 
-	res, err := o.rdb.Exists(k).Result()
+	res, err := o.rdb.Exists(ctx, k).Result()
 	if err != nil {
 		return false, err
 	}
@@ -20,10 +21,10 @@ func (o *InstanceObj) IsKicked(chatID int64, userID int) (bool, error) {
 	return true, nil
 }
 
-func (o *InstanceObj) SetKicked(chatID int64, userID int, ttl time.Duration) error {
+func (o *InstanceObj) SetKicked(ctx context.Context, chatID int64, userID int, ttl time.Duration) error {
 	key := fmt.Sprintf("irma_kick_{%d_%d}", chatID, userID)
 
-	_, err := o.rdb.Set(key, 1, ttl*2).Result()
+	_, err := o.rdb.Set(ctx, key, 1, ttl*2).Result()
 	if err != nil {
 		return err
 	}
@@ -31,10 +32,10 @@ func (o *InstanceObj) SetKicked(chatID int64, userID int, ttl time.Duration) err
 	return nil
 }
 
-func (o *InstanceObj) DelKicked(chatID int64, userID int) error {
+func (o *InstanceObj) DelKicked(ctx context.Context, chatID int64, userID int) error {
 	key := fmt.Sprintf("irma_kick_{%d_%d}", chatID, userID)
 
-	_, err := o.rdb.Del(key).Result()
+	_, err := o.rdb.Del(ctx, key).Result()
 	if err != nil {
 		return err
 	}

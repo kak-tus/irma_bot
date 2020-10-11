@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -11,17 +12,17 @@ import (
 	"github.com/kak-tus/irma_bot/storage"
 )
 
-func (o *InstanceObj) process(msg tgbotapi.Update) error {
+func (o *InstanceObj) process(ctx context.Context, msg tgbotapi.Update) error {
 	if msg.Message != nil {
-		return o.processMsg(msg.Message)
+		return o.processMsg(ctx, msg.Message)
 	} else if msg.CallbackQuery != nil {
-		return o.processCallback(msg.CallbackQuery)
+		return o.processCallback(ctx, msg.CallbackQuery)
 	}
 
 	return nil
 }
 
-func (o *InstanceObj) processMsg(msg *tgbotapi.Message) error {
+func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) error {
 	if msg.Chat.IsPrivate() {
 		resp := tgbotapi.NewMessage(msg.Chat.ID, o.cnf.Telegram.Texts.Usage)
 		_, err := o.bot.Send(resp)
@@ -42,7 +43,7 @@ func (o *InstanceObj) processMsg(msg *tgbotapi.Message) error {
 		return nil
 	}
 
-	banned, err = o.banKickPool(msg)
+	banned, err = o.banKickPool(ctx, msg)
 	if err != nil {
 		return err
 	}
@@ -60,7 +61,7 @@ func (o *InstanceObj) processMsg(msg *tgbotapi.Message) error {
 		MessageID: msg.MessageID,
 		UserID:    msg.From.ID,
 	}
-	if err := o.stor.AddToActionPool(act, time.Second); err != nil {
+	if err := o.stor.AddToActionPool(ctx, act, time.Second); err != nil {
 		return err
 	}
 	act = storage.Action{
@@ -68,11 +69,11 @@ func (o *InstanceObj) processMsg(msg *tgbotapi.Message) error {
 		Type:   "kick",
 		UserID: msg.From.ID,
 	}
-	if err := o.stor.AddToActionPool(act, time.Second); err != nil {
+	if err := o.stor.AddToActionPool(ctx, act, time.Second); err != nil {
 		return err
 	}
 
-	cnt, err := o.stor.GetNewbieMessages(msg.Chat.ID, msg.From.ID)
+	cnt, err := o.stor.GetNewbieMessages(ctx, msg.Chat.ID, msg.From.ID)
 	if err != nil {
 		return err
 	}
@@ -80,11 +81,11 @@ func (o *InstanceObj) processMsg(msg *tgbotapi.Message) error {
 	// In case of newbie we got count >0, for ordinary user count=0
 	if cnt > 0 && cnt <= 4 {
 		// if cnt > 0 && cnt <= 40 {
-		return o.messageFromNewbie(msg)
+		return o.messageFromNewbie(ctx, msg)
 	}
 
 	if msg.NewChatMembers != nil {
-		return o.newMembers(msg)
+		return o.newMembers(ctx, msg)
 	}
 
 	name := fmt.Sprintf("@%s", o.cnf.Telegram.BotName)
@@ -96,7 +97,7 @@ func (o *InstanceObj) processMsg(msg *tgbotapi.Message) error {
 	return nil
 }
 
-func (o *InstanceObj) processCallback(msg *tgbotapi.CallbackQuery) error {
+func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.CallbackQuery) error {
 	// UserID_ChatID_QuestionID_AnswerNum
 	tkns := strings.Split(msg.Data, "_")
 	if len(tkns) != 4 {
@@ -150,7 +151,7 @@ func (o *InstanceObj) processCallback(msg *tgbotapi.CallbackQuery) error {
 	}
 
 	if quest[questionID].Answers[answerNum].Correct == 1 {
-		err := o.stor.DelKicked(chatID, userID)
+		err := o.stor.DelKicked(ctx, chatID, userID)
 		if err != nil {
 			return err
 		}

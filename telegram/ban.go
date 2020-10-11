@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"context"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -51,8 +52,8 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 	return true, nil
 }
 
-func (o *InstanceObj) banKickPool(msg *tgbotapi.Message) (bool, error) {
-	kicked, err := o.stor.IsKicked(msg.Chat.ID, msg.From.ID)
+func (o *InstanceObj) banKickPool(ctx context.Context, msg *tgbotapi.Message) (bool, error) {
+	kicked, err := o.stor.IsKicked(ctx, msg.Chat.ID, msg.From.ID)
 	if err != nil {
 		return false, err
 	}

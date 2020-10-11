@@ -1,19 +1,23 @@
 package telegram
 
 import (
+	"context"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 func (o *InstanceObj) processActions() error {
-	acts, err := o.stor.GetFromActionPool()
+	ctx, cancel := context.WithTimeout(nil, time.Minute)
+	defer cancel()
+
+	acts, err := o.stor.GetFromActionPool(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, a := range acts {
-		kicked, err := o.stor.IsKicked(a.ChatID, a.UserID)
+		kicked, err := o.stor.IsKicked(ctx, a.ChatID, a.UserID)
 		if err != nil {
 			return err
 		}

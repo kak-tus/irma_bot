@@ -102,10 +102,15 @@ func (o *InstanceObj) Start() error {
 	go func() {
 		for {
 			msg := <-upd
-			err := o.process(msg)
+
+			ctx, cancel := context.WithTimeout(nil, time.Minute)
+
+			err := o.process(ctx, msg)
 			if err != nil {
 				o.log.Error(err)
 			}
+
+			cancel()
 		}
 	}()
 

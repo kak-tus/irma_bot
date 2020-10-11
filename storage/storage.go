@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/cnf"
 	"go.uber.org/zap"

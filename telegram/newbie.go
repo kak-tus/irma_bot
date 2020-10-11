@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"github.com/kak-tus/irma_bot/storage"
 )
 
-func (o *InstanceObj) messageFromNewbie(msg *tgbotapi.Message) error {
+func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Message) error {
 	var ban bool
 
 	if msg.Entities != nil {
@@ -35,7 +36,7 @@ func (o *InstanceObj) messageFromNewbie(msg *tgbotapi.Message) error {
 	}
 
 	if !ban {
-		return o.stor.AddNewbieMessages(msg.Chat.ID, msg.From.ID)
+		return o.stor.AddNewbieMessages(ctx, msg.Chat.ID, msg.From.ID)
 	}
 
 	o.log.Infow("Restricted message",
@@ -63,7 +64,7 @@ func (o *InstanceObj) messageFromNewbie(msg *tgbotapi.Message) error {
 	return nil
 }
 
-func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
+func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) error {
 	isAdm, err := o.isAdmin(msg.Chat.ID, msg.From.ID)
 	if err != nil {
 		return err
@@ -89,7 +90,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 				"Chat", msg.Chat.ID,
 			)
 
-			err := o.stor.AddNewbieMessages(msg.Chat.ID, m.ID)
+			err := o.stor.AddNewbieMessages(ctx, msg.Chat.ID, m.ID)
 			if err != nil {
 				return err
 			}
@@ -158,11 +159,11 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 			MessageID: res.MessageID,
 			UserID:    m.ID,
 		}
-		if err := o.stor.AddToActionPool(act, banTimeout); err != nil {
+		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
 		}
 
-		err = o.stor.SetKicked(msg.Chat.ID, m.ID, banTimeout)
+		err = o.stor.SetKicked(ctx, msg.Chat.ID, m.ID, banTimeout)
 		if err != nil {
 			return err
 		}
@@ -173,7 +174,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 			MessageID: msg.MessageID,
 			UserID:    m.ID,
 		}
-		if err := o.stor.AddToActionPool(act, banTimeout); err != nil {
+		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
 		}
 
@@ -182,7 +183,7 @@ func (o *InstanceObj) newMembers(msg *tgbotapi.Message) error {
 			Type:   "kick",
 			UserID: m.ID,
 		}
-		if err := o.stor.AddToActionPool(act, banTimeout); err != nil {
+		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
 		}
 	}

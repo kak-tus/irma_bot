@@ -1,17 +1,18 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 )
 
-func (o *InstanceObj) GetNewbieMessages(chatID int64, userID int) (int, error) {
+func (o *InstanceObj) GetNewbieMessages(ctx context.Context, chatID int64, userID int) (int, error) {
 	k := fmt.Sprintf("irma_newbie_{%d_%d}", chatID, userID)
 
-	res, err := o.rdb.Get(k).Result()
+	res, err := o.rdb.Get(ctx, k).Result()
 	if err != nil && err != redis.Nil {
 		return 0, err
 	} else if err != nil && err == redis.Nil {
@@ -26,15 +27,15 @@ func (o *InstanceObj) GetNewbieMessages(chatID int64, userID int) (int, error) {
 	return i, nil
 }
 
-func (o *InstanceObj) AddNewbieMessages(chatID int64, userID int) error {
+func (o *InstanceObj) AddNewbieMessages(ctx context.Context, chatID int64, userID int) error {
 	k := fmt.Sprintf("irma_newbie_{%d_%d}", chatID, userID)
 
 	pipe := o.rdb.TxPipeline()
 
-	pipe.Incr(k)
-	pipe.Expire(k, time.Hour*24*30)
+	pipe.Incr(ctx, k)
+	pipe.Expire(ctx, k, time.Hour*24*30)
 
-	_, err := pipe.Exec()
+	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return err
 	}
