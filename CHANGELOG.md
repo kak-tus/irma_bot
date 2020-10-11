@@ -1,3 +1,6 @@
+Unreleases
+  - Update all dependencies.
+
 2020-10-10 v1.3.1
   - Select from db fix.
 
