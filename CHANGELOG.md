@@ -1,5 +1,6 @@
-Unreleases
+2020-10-11 v1.3.2
   - Update all dependencies.
+  - Ban for video.
 
 2020-10-10 v1.3.1
   - Select from db fix.

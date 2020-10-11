@@ -31,7 +31,15 @@ func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Messa
 		}
 	}
 
-	if msg.ForwardFrom != nil || msg.ForwardFromChat != nil || msg.Sticker != nil || msg.Photo != nil {
+	if msg.ForwardFrom != nil ||
+		msg.ForwardFromChat != nil ||
+		msg.Sticker != nil ||
+		msg.Photo != nil ||
+		msg.Animation != nil ||
+		msg.Audio != nil ||
+		msg.Video != nil ||
+		msg.VideoNote != nil ||
+		msg.Voice != nil {
 		ban = true
 	}
 
