@@ -7,8 +7,51 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/kak-tus/irma_bot/cnf"
 	"github.com/kak-tus/irma_bot/storage"
 )
+
+const defaultGreeting = `
+Hello. This group has AntiSpam protection.
+You must get correct answer to next question in one minute or you will be kicked.
+In case of incorrect answer you can try join group after one day.
+`
+
+const defaultBanTimeout = time.Minute
+
+var defaultQuestions = []cnf.Question{
+	{
+		Answers: []cnf.Answer{
+			{
+				Correct: 1,
+				Text:    "Correct answer 1",
+			},
+			{
+				Text: "Incorrect answer 1",
+			},
+			{
+				Text: "Incorrect answer 2",
+			},
+		},
+		Text: "Question 1",
+	},
+	{
+		Answers: []cnf.Answer{
+			{
+				Correct: 1,
+				Text:    "Correct answer 1",
+			},
+			{
+				Correct: 1,
+				Text:    "Correct answer 2",
+			},
+			{
+				Text: "Incorrect answer 1",
+			},
+		},
+		Text: "Question 2",
+	},
+}
 
 func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Message) error {
 	var ban bool
@@ -109,8 +152,8 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		return nil
 	}
 
-	quest := o.cnf.Telegram.DefaultQuestions
-	greet := o.cnf.Telegram.DefaultGreeting
+	quest := defaultQuestions
+	greet := defaultGreeting
 
 	if gr != nil && len(gr.Questions) != 0 {
 		quest = gr.Questions
@@ -156,7 +199,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 			return err
 		}
 
-		banTimeout := o.cnf.Telegram.DefaultBanTimeoutParsed
+		banTimeout := defaultBanTimeout
 		if gr != nil && gr.BanTimeout != nil {
 			banTimeout = *gr.BanTimeout
 		}

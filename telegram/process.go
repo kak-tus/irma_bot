@@ -12,6 +12,53 @@ import (
 	"github.com/kak-tus/irma_bot/storage"
 )
 
+const usageText = `
+To enable AntiSpam protection of your group:
+
+1. Add this bot to group.
+2. Grant administrator permissions to bot (this allow bot kick spammers).
+
+By default bot uses URL protection: if newbie user send URL or forward message - bot kicks user.
+You can disable or enable this protection by sending to bot:
+
+__IRMA_BOT_NAME__ use_ban_url
+
+or
+
+__IRMA_BOT_NAME__ no_ban_url
+
+Additionaly, you can add questions protection
+Send message in group, format it like this:
+
+__IRMA_BOT_NAME__
+Hello. This group has AntiSpam protection.
+You must get correct answer to next question in one minute or you will be kicked.
+In case of incorrect answer you can try join group after one day.
+
+Question 1?+Correct answer 1;Incorrect answer 1;Incorrect answer 2
+Question 2?+Correct answer 1;+Correct answer 2;Incorrect answer 1
+
+Disable or enable this by
+
+__IRMA_BOT_NAME__ use_ban_question
+
+or
+
+__IRMA_BOT_NAME__ no_ban_question
+
+To setup wait time before ban user send
+
+__IRMA_BOT_NAME__ set_ban_timeout <timeout in minutes from 1 to 60>
+
+as example
+
+__IRMA_BOT_NAME__ set_ban_timeout 5
+
+https://github.com/kak-tus/irma_bot
+`
+
+const botNameTemplate = "__IRMA_BOT_NAME__"
+
 func (o *InstanceObj) process(ctx context.Context, msg tgbotapi.Update) error {
 	if msg.Message != nil {
 		return o.processMsg(ctx, msg.Message)
@@ -23,8 +70,10 @@ func (o *InstanceObj) process(ctx context.Context, msg tgbotapi.Update) error {
 }
 
 func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) error {
+	textWithBotName := strings.ReplaceAll(usageText, botNameTemplate, o.cnf.Telegram.BotName)
+
 	if msg.Chat.IsPrivate() {
-		resp := tgbotapi.NewMessage(msg.Chat.ID, o.cnf.Telegram.Texts.Usage)
+		resp := tgbotapi.NewMessage(msg.Chat.ID, textWithBotName)
 		_, err := o.bot.Send(resp)
 		if err != nil {
 			return err
@@ -128,7 +177,7 @@ func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callbac
 		return err
 	}
 
-	quest := o.cnf.Telegram.DefaultQuestions
+	quest := defaultQuestions
 	if gr != nil && len(gr.Questions) != 0 {
 		quest = gr.Questions
 	}

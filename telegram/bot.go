@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -8,6 +9,66 @@ import (
 	"github.com/kak-tus/irma_bot/cnf"
 	"github.com/kak-tus/irma_bot/db"
 )
+
+type Command struct {
+	Field         string
+	Maximum       int
+	Minimum       int
+	Text          string
+	Value         bool
+	ValueFromText bool
+}
+
+// Commands to bot must have fully unique names
+// In case of one command is part of other command - can be error while
+// command resolving
+var commands = map[string]Command{
+	"use_ban_url": {
+		Field: "ban_url",
+		Text:  `URLs protection enabled\nSend me "no_ban_url" to disable`,
+		Value: true,
+	},
+	"no_ban_url": {
+		Field: "ban_url",
+		Text:  `URLs protection disabled\nSend me "use_ban_url" to enable`,
+		Value: false,
+	},
+	"use_ban_question": {
+		Field: "ban_question",
+		Text:  `Questions protection enabled\nSend me "no_ban_question" to disable`,
+		Value: true,
+	},
+	"no_ban_question": {
+		Field: "ban_question",
+		Text:  `Questions protection disabled\nSend me "use_ban_question" to enable`,
+		Value: false,
+	},
+	"set_ban_timeout": {
+		Field:         "ban_timeout",
+		Maximum:       60,
+		Minimum:       1,
+		Text:          "Ban timeout setuped",
+		ValueFromText: true,
+	},
+}
+
+const (
+	setText       = "AntiSpam protection enabled"
+	greetingLimit = 1000
+	questionLimit = 100
+	answerLimit   = 50
+)
+
+const failTextTemplate = `
+Can't parse your message.
+
+Must be set greeting, at least one question, at least one correct answer and at least one incorrect answer.
+
+Greeting, questions and answers has length limit.
+Greeting - %d characters, question - %d, answer - %d.
+`
+
+var failText = fmt.Sprintf(failTextTemplate, greetingLimit, questionLimit, answerLimit)
 
 func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 	isAdm, err := o.isAdmin(msg.Chat.ID, msg.From.ID)
@@ -19,7 +80,7 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 		return nil
 	}
 
-	for k, v := range o.cnf.Telegram.Texts.Commands {
+	for k, v := range commands {
 		if !strings.Contains(msg.Text, k) {
 			continue
 		}
@@ -72,9 +133,9 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 	var resp tgbotapi.MessageConfig
 
 	if !parsed {
-		resp = tgbotapi.NewMessage(msg.Chat.ID, o.cnf.Telegram.Texts.Fail)
+		resp = tgbotapi.NewMessage(msg.Chat.ID, failText)
 	} else {
-		resp = tgbotapi.NewMessage(msg.Chat.ID, o.cnf.Telegram.Texts.Set)
+		resp = tgbotapi.NewMessage(msg.Chat.ID, setText)
 	}
 
 	_, err = o.bot.Send(resp)
@@ -127,7 +188,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *db.Group, error) {
 			question := strings.TrimSpace(ln[:pos])
 			answers := ln[pos+1:]
 
-			if len(question) > o.cnf.Telegram.Limits.Question {
+			if len(question) > questionLimit {
 				continue
 			}
 
@@ -140,7 +201,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *db.Group, error) {
 			var hasCorrect bool
 
 			for _, a := range answ {
-				if len(a) > o.cnf.Telegram.Limits.Answer {
+				if len(a) > answerLimit {
 					continue
 				}
 
@@ -178,7 +239,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *db.Group, error) {
 		}
 	}
 
-	if greeting == "" || len(greeting) > o.cnf.Telegram.Limits.Greeting || len(questions) == 0 {
+	if greeting == "" || len(greeting) > greetingLimit || len(questions) == 0 {
 		return false, nil, nil
 	}
 

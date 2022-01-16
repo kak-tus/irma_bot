@@ -1,8 +1,6 @@
 package cnf
 
 import (
-	"time"
-
 	"github.com/iph0/conf"
 	"github.com/iph0/conf/envconf"
 	"github.com/iph0/conf/fileconf"
@@ -14,33 +12,9 @@ type Cnf struct {
 	Storage  Stor
 }
 
-type Tg struct {
-	BotName                 string
-	DefaultBanTimeout       string
-	DefaultBanTimeoutParsed time.Duration
-	DefaultGreeting         string
-	DefaultQuestions        []Question
-	Limits                  LimitsConf
-	Listen                  string
-	NameLimit               int
-	Path                    string
-	Proxy                   string
-	Texts                   textsConf
-	Token                   string
-	URL                     string
-}
-
-type textsConf struct {
-	Commands map[string]Command
-	Fail     string
-	Set      string
-	Usage    string
-}
-
-type LimitsConf struct {
-	Answer   int
-	Greeting int
-	Question int
+type Answer struct {
+	Correct int16  `json:"correct"`
+	Text    string `json:"text"`
 }
 
 type Question struct {
@@ -48,22 +22,17 @@ type Question struct {
 	Text    string   `json:"text"`
 }
 
-type Answer struct {
-	Correct int16  `json:"correct"`
-	Text    string `json:"text"`
+type Tg struct {
+	BotName string
+	Listen  string
+	Path    string
+	Proxy   string
+	Token   string
+	URL     string
 }
 
 type DB struct {
 	DBAddr string
-}
-
-type Command struct {
-	Field         string
-	Maximum       int
-	Minimum       int
-	Text          string
-	Value         bool
-	ValueFromText bool
 }
 
 type Stor struct {
@@ -94,11 +63,6 @@ func NewConf() (*Cnf, error) {
 
 	var cnf Cnf
 	if err := conf.Decode(configRaw["irma"], &cnf); err != nil {
-		return nil, err
-	}
-
-	cnf.Telegram.DefaultBanTimeoutParsed, err = time.ParseDuration(cnf.Telegram.DefaultBanTimeout)
-	if err != nil {
 		return nil, err
 	}
 

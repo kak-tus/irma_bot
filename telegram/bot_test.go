@@ -13,11 +13,6 @@ func TestParseQuestions(t *testing.T) {
 		cnf: &cnf.Cnf{
 			Telegram: cnf.Tg{
 				BotName: "test",
-				Limits: cnf.LimitsConf{
-					Answer:   100,
-					Greeting: 100,
-					Question: 100,
-				},
 			},
 		},
 	}

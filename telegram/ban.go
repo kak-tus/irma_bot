@@ -7,6 +7,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
+const nameLimit = 100
+
 func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 	if msg.NewChatMembers == nil {
 		return false, nil
@@ -15,7 +17,7 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 	var toDel bool
 
 	for _, u := range *msg.NewChatMembers {
-		if len(u.FirstName) >= o.cnf.Telegram.NameLimit || len(u.LastName) >= o.cnf.Telegram.NameLimit {
+		if len(u.FirstName) >= nameLimit || len(u.LastName) >= nameLimit {
 			o.log.Infow("Ban long name",
 				"User", u.FirstName,
 				"Chat", msg.Chat.ID,
