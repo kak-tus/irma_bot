@@ -1,0 +1,38 @@
+name: Build image
+
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup ko
+        uses: imjasonh/setup-ko@v0.4
+        with:
+          version: v0.9.3
+
+      - name: Build
+        run: |
+          export KO_DOCKER_REPO="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          ko publish --bare --tags $GITHUB_REF_NAME .
