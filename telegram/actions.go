@@ -5,6 +5,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/kak-tus/irma_bot/storage"
 )
 
 func (o *InstanceObj) processActions() error {
@@ -26,11 +27,11 @@ func (o *InstanceObj) processActions() error {
 			continue
 		}
 
-		if a.Type == "del" {
+		if a.Type == storage.ActionTypeDelete {
 			if err := o.deleteMessage(a.ChatID, a.MessageID); err != nil {
 				return err
 			}
-		} else if a.Type == "kick" {
+		} else if a.Type == storage.ActionTypeKick {
 			kick := tgbotapi.KickChatMemberConfig{
 				ChatMemberConfig: tgbotapi.ChatMemberConfig{
 					ChatID: a.ChatID,

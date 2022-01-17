@@ -209,7 +209,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 
 		act := storage.Action{
 			ChatID:    res.Chat.ID,
-			Type:      "del",
+			Type:      storage.ActionTypeDelete,
 			MessageID: res.MessageID,
 			UserID:    int(m.ID),
 		}
@@ -224,7 +224,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 
 		act = storage.Action{
 			ChatID:    msg.Chat.ID,
-			Type:      "del",
+			Type:      storage.ActionTypeDelete,
 			MessageID: msg.MessageID,
 			UserID:    int(m.ID),
 		}
@@ -234,7 +234,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 
 		act = storage.Action{
 			ChatID: msg.Chat.ID,
-			Type:   "kick",
+			Type:   storage.ActionTypeKick,
 			UserID: int(m.ID),
 		}
 		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {

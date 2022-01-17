@@ -32,7 +32,7 @@ func (o *InstanceObj) SetKicked(ctx context.Context, chatID int64, userID int, t
 	return nil
 }
 
-func (o *InstanceObj) DelKicked(ctx context.Context, chatID int64, userID int) error {
+func (o *InstanceObj) DelKicked(ctx context.Context, chatID int64, userID int64) error {
 	key := fmt.Sprintf("irma_kick_{%d_%d}", chatID, userID)
 
 	_, err := o.rdb.Del(ctx, key).Result()

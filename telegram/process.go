@@ -110,7 +110,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 	// if it is in kick pool
 	act := storage.Action{
 		ChatID:    msg.Chat.ID,
-		Type:      "del",
+		Type:      storage.ActionTypeDelete,
 		MessageID: msg.MessageID,
 		UserID:    int(msg.From.ID),
 	}
@@ -120,7 +120,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 
 	act = storage.Action{
 		ChatID: msg.Chat.ID,
-		Type:   "kick",
+		Type:   storage.ActionTypeKick,
 		UserID: int(msg.From.ID),
 	}
 
@@ -159,7 +159,7 @@ func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callbac
 		return nil
 	}
 
-	userID, err := strconv.Atoi(tkns[0])
+	userID, err := strconv.ParseInt(tkns[0], 10, 64)
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callbac
 		return err
 	}
 
-	if msg.From.ID != int64(userID) || msg.Message.Chat.ID != chatID {
+	if msg.From.ID != userID || msg.Message.Chat.ID != chatID {
 		return nil
 	}
 

@@ -8,10 +8,17 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+type ActionType string
+
+const (
+	ActionTypeDelete ActionType = "del"
+	ActionTypeKick   ActionType = "kick"
+)
+
 type Action struct {
 	ChatID    int64
 	MessageID int
-	Type      string
+	Type      ActionType
 	UserID    int
 }
 
