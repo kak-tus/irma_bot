@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/cnf"
 	"github.com/kak-tus/irma_bot/storage"
@@ -58,7 +58,7 @@ func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Messa
 	var ban bool
 
 	if msg.Entities != nil {
-		for _, e := range *msg.Entities {
+		for _, e := range msg.Entities {
 			if e.Type == "url" || e.Type == "text_link" || e.Type == "mention" || e.Type == "email" {
 				ban = true
 				break
@@ -67,7 +67,7 @@ func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Messa
 	}
 
 	if msg.CaptionEntities != nil {
-		for _, e := range *msg.CaptionEntities {
+		for _, e := range msg.CaptionEntities {
 			if e.Type == "url" || e.Type == "text_link" || e.Type == "mention" || e.Type == "email" {
 				ban = true
 				break
@@ -88,7 +88,7 @@ func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Messa
 	}
 
 	if !ban {
-		return o.stor.AddNewbieMessages(ctx, msg.Chat.ID, msg.From.ID)
+		return o.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(msg.From.ID))
 	}
 
 	o.log.Infow("Restricted message",
@@ -104,7 +104,7 @@ func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Messa
 		UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
 	}
 
-	_, err := o.bot.KickChatMember(kick)
+	_, err := o.bot.Request(kick)
 	if err != nil {
 		return err
 	}
@@ -135,13 +135,13 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		return err
 	}
 
-	for _, m := range *msg.NewChatMembers {
+	for _, m := range msg.NewChatMembers {
 		o.log.Infow("Newbie found, add messages",
 			"User", m.FirstName,
 			"Chat", msg.Chat.ID,
 		)
 
-		err := o.stor.AddNewbieMessages(ctx, msg.Chat.ID, m.ID)
+		err := o.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(m.ID))
 		if err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		greet = gr.Greeting.String
 	}
 
-	for _, m := range *msg.NewChatMembers {
+	for _, m := range msg.NewChatMembers {
 		o.log.Infow("Newbie found, send question",
 			"User", m.FirstName,
 			"Chat", msg.Chat.ID,
@@ -211,13 +211,13 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 			ChatID:    res.Chat.ID,
 			Type:      "del",
 			MessageID: res.MessageID,
-			UserID:    m.ID,
+			UserID:    int(m.ID),
 		}
 		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
 		}
 
-		err = o.stor.SetKicked(ctx, msg.Chat.ID, m.ID, banTimeout)
+		err = o.stor.SetKicked(ctx, msg.Chat.ID, int(m.ID), banTimeout)
 		if err != nil {
 			return err
 		}
@@ -226,7 +226,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 			ChatID:    msg.Chat.ID,
 			Type:      "del",
 			MessageID: msg.MessageID,
-			UserID:    m.ID,
+			UserID:    int(m.ID),
 		}
 		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
@@ -235,7 +235,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		act = storage.Action{
 			ChatID: msg.Chat.ID,
 			Type:   "kick",
-			UserID: m.ID,
+			UserID: int(m.ID),
 		}
 		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err

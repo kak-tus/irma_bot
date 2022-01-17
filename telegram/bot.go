@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/cnf"
 	"github.com/kak-tus/irma_bot/model/queries"
@@ -176,8 +176,10 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, 
 	return true, greeting, questions, nil
 }
 
-func (o *InstanceObj) isAdmin(chatID int64, userID int) (bool, error) {
-	adms, err := o.bot.GetChatAdministrators(tgbotapi.ChatConfig{ChatID: chatID})
+func (o *InstanceObj) isAdmin(chatID int64, userID int64) (bool, error) {
+	req := tgbotapi.ChatAdministratorsConfig{tgbotapi.ChatConfig{ChatID: chatID}}
+
+	adms, err := o.bot.GetChatAdministrators(req)
 	if err != nil {
 		return false, err
 	}

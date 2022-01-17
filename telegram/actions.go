@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func (o *InstanceObj) processActions() error {
@@ -34,12 +34,12 @@ func (o *InstanceObj) processActions() error {
 			kick := tgbotapi.KickChatMemberConfig{
 				ChatMemberConfig: tgbotapi.ChatMemberConfig{
 					ChatID: a.ChatID,
-					UserID: a.UserID,
+					UserID: int64(a.UserID),
 				},
 				UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
 			}
 
-			_, err := o.bot.KickChatMember(kick)
+			_, err := o.bot.Request(kick)
 			if err != nil {
 				return err
 			}

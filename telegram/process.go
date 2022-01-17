@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/storage"
 )
@@ -109,7 +109,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 		ChatID:    msg.Chat.ID,
 		Type:      "del",
 		MessageID: msg.MessageID,
-		UserID:    msg.From.ID,
+		UserID:    int(msg.From.ID),
 	}
 	if err := o.stor.AddToActionPool(ctx, act, time.Second); err != nil {
 		return err
@@ -117,13 +117,13 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 	act = storage.Action{
 		ChatID: msg.Chat.ID,
 		Type:   "kick",
-		UserID: msg.From.ID,
+		UserID: int(msg.From.ID),
 	}
 	if err := o.stor.AddToActionPool(ctx, act, time.Second); err != nil {
 		return err
 	}
 
-	cnt, err := o.stor.GetNewbieMessages(ctx, msg.Chat.ID, msg.From.ID)
+	cnt, err := o.stor.GetNewbieMessages(ctx, msg.Chat.ID, int(msg.From.ID))
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callbac
 		return err
 	}
 
-	if msg.From.ID != userID || msg.Message.Chat.ID != chatID {
+	if msg.From.ID != int64(userID) || msg.Message.Chat.ID != chatID {
 		return nil
 	}
 

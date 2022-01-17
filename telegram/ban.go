@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const nameLimit = 100
@@ -16,7 +16,7 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 
 	var toDel bool
 
-	for _, u := range *msg.NewChatMembers {
+	for _, u := range msg.NewChatMembers {
 		if len(u.FirstName) >= nameLimit || len(u.LastName) >= nameLimit {
 			o.log.Infow("Ban long name",
 				"User", u.FirstName,
@@ -32,7 +32,7 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 		return false, nil
 	}
 
-	for _, u := range *msg.NewChatMembers {
+	for _, u := range msg.NewChatMembers {
 		kick := tgbotapi.KickChatMemberConfig{
 			ChatMemberConfig: tgbotapi.ChatMemberConfig{
 				ChatID: msg.Chat.ID,
@@ -41,7 +41,7 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 			UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
 		}
 
-		_, err := o.bot.KickChatMember(kick)
+		_, err := o.bot.Request(kick)
 		if err != nil {
 			return true, err
 		}
@@ -55,7 +55,7 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 }
 
 func (o *InstanceObj) banKickPool(ctx context.Context, msg *tgbotapi.Message) (bool, error) {
-	kicked, err := o.stor.IsKicked(ctx, msg.Chat.ID, msg.From.ID)
+	kicked, err := o.stor.IsKicked(ctx, msg.Chat.ID, int(msg.From.ID))
 	if err != nil {
 		return false, err
 	}
@@ -77,7 +77,7 @@ func (o *InstanceObj) banKickPool(ctx context.Context, msg *tgbotapi.Message) (b
 		UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
 	}
 
-	_, err = o.bot.KickChatMember(kick)
+	_, err = o.bot.Request(kick)
 	if err != nil {
 		return true, err
 	}

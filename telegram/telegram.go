@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/kak-tus/irma_bot/cnf"
 	"github.com/kak-tus/irma_bot/model"
 	"github.com/kak-tus/irma_bot/storage"
@@ -29,50 +29,26 @@ type InstanceObj struct {
 }
 
 func NewTelegram(log *zap.SugaredLogger) (*InstanceObj, error) {
-	c, err := cnf.NewConf()
+	cnf, err := cnf.NewConf()
 	if err != nil {
 		return nil, err
 	}
 
-	httpTransport := &http.Transport{}
-
-	if c.Telegram.Proxy != "" {
-		dialer, err := proxy.SOCKS5("tcp", c.Telegram.Proxy, nil, proxy.Direct)
-		if err != nil {
-			return nil, err
-		}
-
-		httpTransport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			done := make(chan bool)
-			var con net.Conn
-			var err error
-
-			go func() {
-				con, err = dialer.Dial(network, addr)
-				done <- true
-			}()
-
-			select {
-			case <-ctx.Done():
-				return nil, errors.New("Dial timeout")
-			case <-done:
-				return con, err
-			}
-		}
-	}
-
-	httpClient := &http.Client{Transport: httpTransport, Timeout: time.Minute}
-
-	bot, err := tgbotapi.NewBotAPIWithClient(c.Telegram.Token, httpClient)
+	httpClient, err := getClient(cnf)
 	if err != nil {
 		return nil, err
 	}
 
-	srv := &http.Server{Addr: c.Telegram.Listen}
+	bot, err := tgbotapi.NewBotAPIWithClient(cnf.Telegram.Token, tgbotapi.APIEndpoint, httpClient)
+	if err != nil {
+		return nil, err
+	}
+
+	srv := &http.Server{Addr: cnf.Telegram.Listen}
 
 	modelOpts := model.Options{
 		Log: log,
-		URL: c.DB.Addr,
+		URL: cnf.DB.Addr,
 	}
 
 	model, err := model.NewModel(modelOpts)
@@ -80,14 +56,14 @@ func NewTelegram(log *zap.SugaredLogger) (*InstanceObj, error) {
 		return nil, err
 	}
 
-	stor, err := storage.NewStorage(c, log)
+	stor, err := storage.NewStorage(cnf, log)
 	if err != nil {
 		return nil, err
 	}
 
 	inst := &InstanceObj{
 		bot:   bot,
-		cnf:   c,
+		cnf:   cnf,
 		lock:  &sync.WaitGroup{},
 		log:   log,
 		model: model,
@@ -100,14 +76,19 @@ func NewTelegram(log *zap.SugaredLogger) (*InstanceObj, error) {
 }
 
 func (o *InstanceObj) Start() error {
-	o.log.Info("Start telegram")
+	o.log.Info("start telegram")
 
-	res, err := o.bot.SetWebhook(tgbotapi.NewWebhook(o.cnf.Telegram.URL + o.cnf.Telegram.Path))
+	webhookCnf, err := tgbotapi.NewWebhook(o.cnf.Telegram.URL + o.cnf.Telegram.Path)
 	if err != nil {
 		return err
 	}
 
-	o.log.Info(res.Description)
+	resp, err := o.bot.Request(webhookCnf)
+	if err != nil {
+		return err
+	}
+
+	o.log.Info(resp.Description)
 
 	upd := o.bot.ListenForWebhook("/" + o.cnf.Telegram.Path)
 
@@ -183,7 +164,7 @@ func (o *InstanceObj) Stop() error {
 func (o *InstanceObj) deleteMessage(chatID int64, messageID int) error {
 	del := tgbotapi.NewDeleteMessage(chatID, messageID)
 
-	if _, err := o.bot.DeleteMessage(del); err != nil {
+	if _, err := o.bot.Request(del); err != nil {
 		ex, ok := err.(tgbotapi.Error)
 		if ok && ex.Message == "Bad Request: message to delete not found" {
 			o.log.Warnw("Message in chat is already deleted",
@@ -196,4 +177,40 @@ func (o *InstanceObj) deleteMessage(chatID int64, messageID int) error {
 	}
 
 	return nil
+}
+
+func getClient(cnf *cnf.Cnf) (*http.Client, error) {
+	httpTransport := &http.Transport{}
+
+	if cnf.Telegram.Proxy != "" {
+		dialer, err := proxy.SOCKS5("tcp", cnf.Telegram.Proxy, nil, proxy.Direct)
+		if err != nil {
+			return nil, err
+		}
+
+		httpTransport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			done := make(chan bool)
+
+			var (
+				con net.Conn
+				err error
+			)
+
+			go func() {
+				con, err = dialer.Dial(network, addr)
+				done <- true
+			}()
+
+			select {
+			case <-ctx.Done():
+				return nil, errors.New("dial timeout")
+			case <-done:
+				return con, err
+			}
+		}
+	}
+
+	httpClient := &http.Client{Transport: httpTransport, Timeout: time.Minute}
+
+	return httpClient, nil
 }
