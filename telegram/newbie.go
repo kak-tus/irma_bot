@@ -148,7 +148,8 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		}
 	}
 
-	if !gr.BanQuestion.Valid {
+	// Ban by question by default if group is not registered
+	if gr.BanQuestion.Valid && !gr.BanQuestion.Bool {
 		return nil
 	}
 

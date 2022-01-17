@@ -4,6 +4,7 @@ Unreleased v1.2.0
   - Switch to codegened database code.
   - Update ll dependencies.
   - Build with ko and use github container registry.
+  - Question protection enabled by default.
 
 2020-10-11 v1.3.3
   - Fix start.
