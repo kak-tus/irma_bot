@@ -13,8 +13,10 @@ import (
 func NewStorage(c *cnf.Cnf, log *zap.SugaredLogger) (*InstanceObj, error) {
 	addrs := strings.Split(c.Storage.RedisAddrs, ",")
 
-	var parsed []string
-	var pass string
+	var (
+		parsed []string
+		pass   string
+	)
 
 	for _, a := range addrs {
 		opt, err := redis.ParseURL(a)
