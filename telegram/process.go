@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
@@ -176,7 +177,7 @@ func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callbac
 	}
 
 	gr, err := o.model.Queries.GetGroup(ctx, chatID)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 

@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"time"
@@ -131,7 +132,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 	}
 
 	gr, err := o.model.Queries.GetGroup(ctx, msg.Chat.ID)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
