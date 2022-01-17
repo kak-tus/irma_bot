@@ -18,7 +18,8 @@ const usageText = `
 To enable AntiSpam protection of your group:
 
 1. Add this bot to group.
-2. Grant administrator permissions to bot (this allow bot kick spammers).
+2. Grant administrator permissions (administrator, delete messages) to bot. This allow bot get
+all messages, kick spammers, delete spam messages.
 
 By default bot uses URL protection and Questions protection.
 
