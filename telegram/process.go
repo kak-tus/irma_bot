@@ -108,6 +108,9 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 	// If user send message and newbie message is not processed yet.
 	// Over some time we got this action and delete message/kick user
 	// if it is in kick pool
+	// Add all messages from all users
+	// This is not good for huge count of messages
+	// TODO
 	act := storage.Action{
 		ChatID:    msg.Chat.ID,
 		Type:      storage.ActionTypeDelete,
@@ -135,7 +138,6 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 
 	// In case of newbie we got count >0, for ordinary user count=0
 	if cnt > 0 && cnt <= 4 {
-		// if cnt > 0 && cnt <= 40 {
 		return o.messageFromNewbie(ctx, msg)
 	}
 
