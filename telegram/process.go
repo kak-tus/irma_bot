@@ -20,7 +20,9 @@ To enable AntiSpam protection of your group:
 1. Add this bot to group.
 2. Grant administrator permissions to bot (this allow bot kick spammers).
 
-By default bot uses URL protection: if newbie user send URL or forward message - bot kicks user.
+By default bot uses URL protection and Questions protection.
+
+URL protection: if newbie user send URL or forward message - bot kicks user.
 You can disable or enable this protection by sending to bot:
 
 __IRMA_BOT_NAME__ use_ban_url
@@ -29,8 +31,10 @@ or
 
 __IRMA_BOT_NAME__ no_ban_url
 
-Additionaly, you can add questions protection
-Send message in group, format it like this:
+Questions protection: if user join to group - it gets some default question from bot.
+User must answer to question before write messages.
+
+To configure questions and greeting send message to bot in group, format it like this:
 
 __IRMA_BOT_NAME__
 Hello. This group has AntiSpam protection.
@@ -55,6 +59,9 @@ __IRMA_BOT_NAME__ set_ban_timeout <timeout in minutes from 1 to 60>
 as example
 
 __IRMA_BOT_NAME__ set_ban_timeout 5
+
+Any bot configaration van do anly user with admin permissions.
+Messages from other users will be ignored.
 
 https://github.com/kak-tus/irma_bot
 `
