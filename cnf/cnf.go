@@ -1,10 +1,6 @@
 package cnf
 
-import (
-	"github.com/iph0/conf"
-	"github.com/iph0/conf/envconf"
-	"github.com/iph0/conf/fileconf"
-)
+import "github.com/kelseyhightower/envconfig"
 
 type Cnf struct {
 	DB       DB
@@ -24,7 +20,7 @@ type Question struct {
 
 type Tg struct {
 	BotName string
-	Listen  string
+	Listen  string `default:":8080"`
 	Path    string
 	Proxy   string
 	Token   string
@@ -32,7 +28,7 @@ type Tg struct {
 }
 
 type DB struct {
-	DBAddr string
+	Addr string
 }
 
 type Stor struct {
@@ -40,29 +36,10 @@ type Stor struct {
 }
 
 func NewConf() (*Cnf, error) {
-	fileLdr := fileconf.NewLoader("etc", "/etc")
-	envLdr := envconf.NewLoader()
-
-	configProc := conf.NewProcessor(
-		conf.ProcessorConfig{
-			Loaders: map[string]conf.Loader{
-				"file": fileLdr,
-				"env":  envLdr,
-			},
-		},
-	)
-
-	configRaw, err := configProc.Load(
-		"file:irma.yml",
-		"env:^IRMA_",
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
 	var cnf Cnf
-	if err := conf.Decode(configRaw["irma"], &cnf); err != nil {
+
+	err := envconfig.Process("IRMA", &cnf)
+	if err != nil {
 		return nil, err
 	}
 

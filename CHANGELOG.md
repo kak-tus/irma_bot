@@ -1,4 +1,6 @@
 Unreleased v1.2.0
+  - Switch to only env config.
+  - Change env name from IRMA_REDIS_ADDRS to IRMA_STORAGE_REDIS_ADDRS.
 
 2020-10-11 v1.3.3
   - Fix start.

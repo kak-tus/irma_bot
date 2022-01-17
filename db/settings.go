@@ -8,7 +8,7 @@ import (
 )
 
 func NewDB(c *cnf.Cnf, log *zap.SugaredLogger) (*InstanceObj, error) {
-	connCnf, err := pgx.ParseConnectionString(c.DB.DBAddr)
+	connCnf, err := pgx.ParseConnectionString(c.DB.Addr)
 	if err != nil {
 		return nil, err
 	}
