@@ -8,16 +8,6 @@ type Cnf struct {
 	Storage  Stor
 }
 
-type Answer struct {
-	Correct int16  `json:"correct"`
-	Text    string `json:"text"`
-}
-
-type Question struct {
-	Answers []Answer `json:"answers"`
-	Text    string   `json:"text"`
-}
-
 type Tg struct {
 	BotName string
 	Listen  string `default:":8080"`

@@ -30,9 +30,9 @@ func TestParseQuestions(t *testing.T) {
 	require.True(t, parsed, "must be parsed")
 	require.Equal(t, greet, greeting)
 
-	require.Equal(t, []cnf.Question{
+	require.Equal(t, []Question{
 		{
-			Answers: []cnf.Answer{
+			Answers: []Answer{
 				{Correct: 1, Text: "Белград"},
 				{Correct: 0, Text: "Рашка"},
 				{Correct: 0, Text: "Сараево"},

@@ -8,7 +8,6 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/kak-tus/irma_bot/cnf"
 	"github.com/kak-tus/irma_bot/storage"
 )
 
@@ -20,9 +19,9 @@ In case of incorrect answer you can try join group after one day.
 
 const defaultBanTimeout = time.Minute
 
-var defaultQuestions = []cnf.Question{
+var defaultQuestions = []Question{
 	{
-		Answers: []cnf.Answer{
+		Answers: []Answer{
 			{
 				Correct: 1,
 				Text:    "Correct answer 1",
@@ -37,7 +36,7 @@ var defaultQuestions = []cnf.Question{
 		Text: "Question 1",
 	},
 	{
-		Answers: []cnf.Answer{
+		Answers: []Answer{
 			{
 				Correct: 1,
 				Text:    "Correct answer 1",

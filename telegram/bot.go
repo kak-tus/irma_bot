@@ -8,7 +8,6 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/kak-tus/irma_bot/cnf"
 	"github.com/kak-tus/irma_bot/model/queries"
 )
 
@@ -29,6 +28,16 @@ Greeting - %d characters, question - %d, answer - %d.
 `
 
 var failText = fmt.Sprintf(failTextTemplate, greetingLimit, questionLimit, answerLimit)
+
+type Answer struct {
+	Correct int16  `json:"correct"`
+	Text    string `json:"text"`
+}
+
+type Question struct {
+	Answers []Answer `json:"answers"`
+	Text    string   `json:"text"`
+}
 
 func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) error {
 	isAdm, err := o.isAdmin(msg.Chat.ID, msg.From.ID)
@@ -90,7 +99,7 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 	return nil
 }
 
-func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, error) {
+func (o *InstanceObj) parseQuestions(txt string) (bool, string, []Question, error) {
 	// @ + name + " "
 	// @ + name + "\n"
 	l := 1 + len(o.cnf.Telegram.BotName) + 1
@@ -104,7 +113,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, 
 
 	var greeting string
 
-	questions := make([]cnf.Question, 0)
+	questions := make([]Question, 0)
 
 	lines := strings.Split(txt, "\n")
 
@@ -128,7 +137,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, 
 				continue
 			}
 
-			answParsed := make([]cnf.Answer, 0, len(answ))
+			answParsed := make([]Answer, 0, len(answ))
 
 			var hasCorrect bool
 
@@ -141,13 +150,13 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, 
 					if len(a) > 1 {
 						hasCorrect = true
 
-						answParsed = append(answParsed, cnf.Answer{
+						answParsed = append(answParsed, Answer{
 							Correct: 1,
 							Text:    strings.TrimSpace(a[1:]),
 						})
 					}
 				} else {
-					answParsed = append(answParsed, cnf.Answer{
+					answParsed = append(answParsed, Answer{
 						Text: strings.TrimSpace(a),
 					})
 				}
@@ -161,7 +170,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, 
 				continue
 			}
 
-			q := cnf.Question{
+			q := Question{
 				Answers: answParsed,
 				Text:    question,
 			}
