@@ -10,15 +10,6 @@ import (
 	"github.com/kak-tus/irma_bot/model/queries"
 )
 
-// 	"set_ban_timeout": {
-// 		Field:         "ban_timeout",
-// 		Maximum:       60,
-// 		Minimum:       1,
-// 		Text:          "Ban timeout setuped",
-// 		ValueFromText: true,
-// 	},
-// }
-
 func (o *InstanceObj) processCommands(ctx context.Context, msg *tgbotapi.Message) (bool, error) {
 	params := queries.CreateOrUpdateGroupParametersParams{
 		ID: msg.Chat.ID,
