@@ -1,5 +1,5 @@
 BEGIN;
 
-ALTER TABLE public.groups DROP COLUMN ban_timeout;
+DROP TABLE public.groups;
 
 COMMIT;

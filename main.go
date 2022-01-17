@@ -8,6 +8,8 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate sqlc generate
+
 func main() {
 	logger, err := zap.NewProduction()
 	if err != nil {

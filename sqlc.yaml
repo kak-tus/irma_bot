@@ -1,0 +1,10 @@
+version: "1"
+packages:
+  - name: "queries"
+    path: "model/queries"
+    queries: "./model/queries_src"
+    schema: "./migrations"
+    engine: "postgresql"
+overrides:
+  - go_type: "github.com/gofrs/uuid.UUID"
+    db_type: "uuid"

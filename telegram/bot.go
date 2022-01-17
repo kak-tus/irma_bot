@@ -1,56 +1,16 @@
 package telegram
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
-	"strconv"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/cnf"
-	"github.com/kak-tus/irma_bot/db"
+	"github.com/kak-tus/irma_bot/model/queries"
 )
-
-type Command struct {
-	Field         string
-	Maximum       int
-	Minimum       int
-	Text          string
-	Value         bool
-	ValueFromText bool
-}
-
-// Commands to bot must have fully unique names
-// In case of one command is part of other command - can be error while
-// command resolving
-var commands = map[string]Command{
-	"use_ban_url": {
-		Field: "ban_url",
-		Text:  `URLs protection enabled\nSend me "no_ban_url" to disable`,
-		Value: true,
-	},
-	"no_ban_url": {
-		Field: "ban_url",
-		Text:  `URLs protection disabled\nSend me "use_ban_url" to enable`,
-		Value: false,
-	},
-	"use_ban_question": {
-		Field: "ban_question",
-		Text:  `Questions protection enabled\nSend me "no_ban_question" to disable`,
-		Value: true,
-	},
-	"no_ban_question": {
-		Field: "ban_question",
-		Text:  `Questions protection disabled\nSend me "use_ban_question" to enable`,
-		Value: false,
-	},
-	"set_ban_timeout": {
-		Field:         "ban_timeout",
-		Maximum:       60,
-		Minimum:       1,
-		Text:          "Ban timeout setuped",
-		ValueFromText: true,
-	},
-}
 
 const (
 	setText       = "AntiSpam protection enabled"
@@ -70,7 +30,7 @@ Greeting - %d characters, question - %d, answer - %d.
 
 var failText = fmt.Sprintf(failTextTemplate, greetingLimit, questionLimit, answerLimit)
 
-func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
+func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) error {
 	isAdm, err := o.isAdmin(msg.Chat.ID, msg.From.ID)
 	if err != nil {
 		return err
@@ -80,52 +40,16 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 		return nil
 	}
 
-	for k, v := range commands {
-		if !strings.Contains(msg.Text, k) {
-			continue
-		}
+	wasCommand, err := o.processCommands(ctx, msg)
+	if err != nil {
+		return err
+	}
 
-		o.log.Infof("Command %s", k)
-
-		var val interface{}
-
-		if v.ValueFromText {
-			idx := strings.Index(msg.Text, k)
-
-			// already checked on contains
-			toParse := strings.TrimSpace(msg.Text[idx+len(k):])
-
-			parsed, err := strconv.Atoi(toParse)
-			if err != nil {
-				o.log.Debugf("parse of %s failed with %v", toParse, err)
-				continue
-			}
-
-			if parsed < v.Minimum || parsed > v.Maximum {
-				continue
-			}
-
-			val = parsed
-		} else {
-			val = v.Value
-		}
-
-		err := o.db.CreateGroup(msg.Chat.ID, map[string]interface{}{v.Field: val})
-		if err != nil {
-			return err
-		}
-
-		resp := tgbotapi.NewMessage(msg.Chat.ID, v.Text)
-
-		_, err = o.bot.Send(resp)
-		if err != nil {
-			return err
-		}
-
+	if wasCommand {
 		return nil
 	}
 
-	parsed, gr, err := o.parseQuestions(msg.Text)
+	parsed, greeting, questions, err := o.parseQuestions(msg.Text)
 	if err != nil {
 		return err
 	}
@@ -147,12 +71,18 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 		return nil
 	}
 
-	toCr := map[string]interface{}{
-		"greeting":  gr.Greeting,
-		"questions": gr.Questions,
+	encoded, err := jsoniter.Marshal(questions)
+	if err != nil {
+		return err
 	}
 
-	err = o.db.CreateGroup(msg.Chat.ID, toCr)
+	group := queries.CreateOrUpdateGroupQuestionsParams{
+		ID:        msg.Chat.ID,
+		Greeting:  sql.NullString{Valid: true, String: greeting},
+		Questions: encoded,
+	}
+
+	err = o.model.Queries.CreateOrUpdateGroupQuestions(ctx, group)
 	if err != nil {
 		return err
 	}
@@ -160,13 +90,13 @@ func (o *InstanceObj) messageToBot(msg *tgbotapi.Message) error {
 	return nil
 }
 
-func (o *InstanceObj) parseQuestions(txt string) (bool, *db.Group, error) {
+func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, error) {
 	// @ + name + " "
 	// @ + name + "\n"
 	l := 1 + len(o.cnf.Telegram.BotName) + 1
 
 	if len(txt) <= l {
-		return false, nil, nil
+		return false, "", nil, nil
 	}
 
 	// Cut bot name
@@ -240,15 +170,10 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, *db.Group, error) {
 	}
 
 	if greeting == "" || len(greeting) > greetingLimit || len(questions) == 0 {
-		return false, nil, nil
+		return false, "", nil, nil
 	}
 
-	gr := &db.Group{
-		Greeting:  &greeting,
-		Questions: questions,
-	}
-
-	return true, gr, nil
+	return true, greeting, questions, nil
 }
 
 func (o *InstanceObj) isAdmin(chatID int64, userID int) (bool, error) {

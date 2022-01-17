@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	"github.com/kak-tus/irma_bot/cnf"
-	"github.com/kak-tus/irma_bot/db"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseQuestions(t *testing.T) {
@@ -22,23 +21,23 @@ func TestParseQuestions(t *testing.T) {
 
 	Столица Сербии?+Белград;Рашка;Сараево
 	`
-	parsed, questions, err := o.parseQuestions(txt)
+	parsed, greeting, questions, err := o.parseQuestions(txt)
+
+	require.NoError(t, err, "must not be error")
 
 	greet := "Добродошли!\n\n\n"
 
-	assert.Equal(t, true, parsed, "Must be parsed")
-	assert.Equal(t, &db.Group{
-		Greeting: &greet,
-		Questions: []cnf.Question{
-			{
-				Answers: []cnf.Answer{
-					{Correct: 1, Text: "Белград"},
-					{Correct: 0, Text: "Рашка"},
-					{Correct: 0, Text: "Сараево"},
-				},
-				Text: "Столица Сербии",
+	require.True(t, parsed, "must be parsed")
+	require.Equal(t, greet, greeting)
+
+	require.Equal(t, []cnf.Question{
+		{
+			Answers: []cnf.Answer{
+				{Correct: 1, Text: "Белград"},
+				{Correct: 0, Text: "Рашка"},
+				{Correct: 0, Text: "Сараево"},
 			},
+			Text: "Столица Сербии",
 		},
 	}, questions, "Must be questions")
-	assert.Equal(t, nil, err, "Must not be error")
 }

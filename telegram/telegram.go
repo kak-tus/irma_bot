@@ -11,11 +11,22 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/kak-tus/irma_bot/cnf"
-	"github.com/kak-tus/irma_bot/db"
+	"github.com/kak-tus/irma_bot/model"
 	"github.com/kak-tus/irma_bot/storage"
 	"go.uber.org/zap"
 	"golang.org/x/net/proxy"
 )
+
+type InstanceObj struct {
+	bot   *tgbotapi.BotAPI
+	cnf   *cnf.Cnf
+	lock  *sync.WaitGroup
+	log   *zap.SugaredLogger
+	model *model.Model
+	srv   *http.Server
+	stop  chan bool
+	stor  *storage.InstanceObj
+}
 
 func NewTelegram(log *zap.SugaredLogger) (*InstanceObj, error) {
 	c, err := cnf.NewConf()
@@ -59,7 +70,12 @@ func NewTelegram(log *zap.SugaredLogger) (*InstanceObj, error) {
 
 	srv := &http.Server{Addr: c.Telegram.Listen}
 
-	db, err := db.NewDB(c, log)
+	modelOpts := model.Options{
+		Log: log,
+		URL: c.DB.Addr,
+	}
+
+	model, err := model.NewModel(modelOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -70,14 +86,14 @@ func NewTelegram(log *zap.SugaredLogger) (*InstanceObj, error) {
 	}
 
 	inst := &InstanceObj{
-		bot:  bot,
-		cnf:  c,
-		lock: &sync.WaitGroup{},
-		log:  log,
-		db:   db,
-		srv:  srv,
-		stop: make(chan bool, 1),
-		stor: stor,
+		bot:   bot,
+		cnf:   c,
+		lock:  &sync.WaitGroup{},
+		log:   log,
+		model: model,
+		srv:   srv,
+		stop:  make(chan bool, 1),
+		stor:  stor,
 	}
 
 	return inst, nil

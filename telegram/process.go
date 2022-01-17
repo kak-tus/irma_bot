@@ -9,6 +9,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/storage"
 )
 
@@ -140,7 +141,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 	name := fmt.Sprintf("@%s", o.cnf.Telegram.BotName)
 
 	if strings.HasPrefix(msg.Text, name) {
-		return o.messageToBot(msg)
+		return o.messageToBot(ctx, msg)
 	}
 
 	return nil
@@ -167,7 +168,7 @@ func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callbac
 		return nil
 	}
 
-	gr, err := o.db.GetGroup(chatID)
+	gr, err := o.model.Queries.GetGroup(ctx, chatID)
 	if err != nil {
 		return err
 	}
@@ -178,8 +179,11 @@ func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callbac
 	}
 
 	quest := defaultQuestions
-	if gr != nil && len(gr.Questions) != 0 {
-		quest = gr.Questions
+	if len(gr.Questions) != 0 {
+		err := jsoniter.Unmarshal(gr.Questions, &quest)
+		if err != nil {
+			return err
+		}
 	}
 
 	if questionID >= len(quest) {

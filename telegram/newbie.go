@@ -7,6 +7,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/cnf"
 	"github.com/kak-tus/irma_bot/storage"
 )
@@ -129,37 +130,39 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		return nil
 	}
 
-	gr, err := o.db.GetGroup(msg.Chat.ID)
+	gr, err := o.model.Queries.GetGroup(ctx, msg.Chat.ID)
 	if err != nil {
 		return err
 	}
 
-	if gr == nil || (gr.BanURL != nil && *gr.BanURL) {
-		for _, m := range *msg.NewChatMembers {
-			o.log.Infow("Newbie found, add messages",
-				"User", m.FirstName,
-				"Chat", msg.Chat.ID,
-			)
+	for _, m := range *msg.NewChatMembers {
+		o.log.Infow("Newbie found, add messages",
+			"User", m.FirstName,
+			"Chat", msg.Chat.ID,
+		)
 
-			err := o.stor.AddNewbieMessages(ctx, msg.Chat.ID, m.ID)
-			if err != nil {
-				return err
-			}
+		err := o.stor.AddNewbieMessages(ctx, msg.Chat.ID, m.ID)
+		if err != nil {
+			return err
 		}
 	}
 
-	if gr == nil || gr.BanQuestion == nil || !*gr.BanQuestion {
+	if !gr.BanQuestion.Valid {
 		return nil
 	}
 
 	quest := defaultQuestions
 	greet := defaultGreeting
 
-	if gr != nil && len(gr.Questions) != 0 {
-		quest = gr.Questions
+	if len(gr.Questions) != 0 {
+		err := jsoniter.Unmarshal(gr.Questions, &quest)
+		if err != nil {
+			return err
+		}
 	}
-	if gr != nil && gr.Greeting != nil && *gr.Greeting != "" {
-		greet = *gr.Greeting
+
+	if gr.Greeting.Valid {
+		greet = gr.Greeting.String
 	}
 
 	for _, m := range *msg.NewChatMembers {
@@ -200,8 +203,8 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		}
 
 		banTimeout := defaultBanTimeout
-		if gr != nil && gr.BanTimeout != nil {
-			banTimeout = *gr.BanTimeout
+		if gr.BanTimeout.Valid {
+			banTimeout = time.Duration(gr.BanTimeout.Int32) * time.Minute
 		}
 
 		act := storage.Action{
