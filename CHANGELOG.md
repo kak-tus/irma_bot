@@ -3,6 +3,7 @@ Unreleased v1.2.0
   - Change env name from IRMA_REDIS_ADDRS to IRMA_STORAGE_REDIS_ADDRS.
   - Switch to codegened database code.
   - Update ll dependencies.
+  - Build with ko and use github container registry.
 
 2020-10-11 v1.3.3
   - Fix start.
