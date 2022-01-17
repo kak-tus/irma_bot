@@ -127,6 +127,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 			"Newbie added by admin, it is normal",
 			"Admin", msg.From.ID,
 		)
+
 		return nil
 	}
 

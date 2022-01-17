@@ -112,6 +112,7 @@ func (o *InstanceObj) Start() error {
 	}()
 
 	tick := time.NewTicker(time.Second * 10)
+
 	o.lock.Add(1)
 
 	go func() {
@@ -158,6 +159,7 @@ func (o *InstanceObj) Stop() error {
 	o.lock.Wait()
 
 	o.log.Info("Stopped telegram")
+
 	return nil
 }
 

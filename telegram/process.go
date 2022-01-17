@@ -75,6 +75,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 
 	if msg.Chat.IsPrivate() {
 		resp := tgbotapi.NewMessage(msg.Chat.ID, textWithBotName)
+
 		_, err := o.bot.Send(resp)
 		if err != nil {
 			return err
@@ -89,6 +90,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 	if err != nil {
 		return err
 	}
+
 	if banned {
 		return nil
 	}
@@ -97,6 +99,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 	if err != nil {
 		return err
 	}
+
 	if banned {
 		return nil
 	}
@@ -114,11 +117,13 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 	if err := o.stor.AddToActionPool(ctx, act, time.Second); err != nil {
 		return err
 	}
+
 	act = storage.Action{
 		ChatID: msg.Chat.ID,
 		Type:   "kick",
 		UserID: int(msg.From.ID),
 	}
+
 	if err := o.stor.AddToActionPool(ctx, act, time.Second); err != nil {
 		return err
 	}

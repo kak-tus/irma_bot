@@ -103,6 +103,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, 
 	txt = txt[l:]
 
 	var greeting string
+
 	questions := make([]cnf.Question, 0)
 
 	lines := strings.Split(txt, "\n")
@@ -128,6 +129,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, 
 			}
 
 			answParsed := make([]cnf.Answer, 0, len(answ))
+
 			var hasCorrect bool
 
 			for _, a := range answ {
@@ -138,6 +140,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, 
 				if strings.HasPrefix(a, "+") {
 					if len(a) > 1 {
 						hasCorrect = true
+
 						answParsed = append(answParsed, cnf.Answer{
 							Correct: 1,
 							Text:    strings.TrimSpace(a[1:]),
@@ -177,7 +180,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []cnf.Question, 
 }
 
 func (o *InstanceObj) isAdmin(chatID int64, userID int64) (bool, error) {
-	req := tgbotapi.ChatAdministratorsConfig{tgbotapi.ChatConfig{ChatID: chatID}}
+	req := tgbotapi.ChatAdministratorsConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: chatID}}
 
 	adms, err := o.bot.GetChatAdministrators(req)
 	if err != nil {

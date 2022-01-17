@@ -24,6 +24,7 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 			)
 
 			toDel = true
+
 			break
 		}
 	}
