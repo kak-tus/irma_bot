@@ -23,45 +23,12 @@ all messages, kick spammers, delete spam messages.
 By default bot uses URL protection and Questions protection.
 
 URL protection: if newbie user send URL or forward message - bot kicks user.
-You can disable or enable this protection by sending to bot:
+Questions protection: if user join to group - it asked some question from bot.
 
-__IRMA_BOT_NAME__ use_ban_url
-
-or
-
-__IRMA_BOT_NAME__ no_ban_url
-
-Questions protection: if user join to group - it gets some default question from bot.
-User must answer to question before write messages.
-
-To configure questions and greeting send message to bot in group, format it like this:
-
-__IRMA_BOT_NAME__
-Hello. This group has AntiSpam protection.
-You must get correct answer to next question in one minute or you will be kicked.
-In case of incorrect answer you can try join group after one day.
-
-Question 1?+Correct answer 1;Incorrect answer 1;Incorrect answer 2
-Question 2?+Correct answer 1;+Correct answer 2;Incorrect answer 1
-
-Disable or enable this by
-
-__IRMA_BOT_NAME__ use_ban_question
-
-or
-
-__IRMA_BOT_NAME__ no_ban_question
-
-To setup wait time before ban user send
-
-__IRMA_BOT_NAME__ set_ban_timeout <timeout in minutes from 1 to 60>
-
-as example
-
-__IRMA_BOT_NAME__ set_ban_timeout 5
-
-Any bot configaration van do anly user with admin permissions.
-Messages from other users will be ignored.
+To configure bot, administrator must:
+1. Start private chat with @__IRMA_BOT_NAME__.
+2. Send any message to @__IRMA_BOT_NAME__ in your public chat.
+3. Bot send configuration url for this public chat to private chat with administrator.
 
 https://github.com/kak-tus/irma_bot
 `

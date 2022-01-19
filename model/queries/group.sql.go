@@ -10,49 +10,33 @@ import (
 	"github.com/kak-tus/irma_bot/model/queries_types"
 )
 
-const createOrUpdateGroupParameters = `-- name: CreateOrUpdateGroupParameters :exec
+const createOrUpdateGroup = `-- name: CreateOrUpdateGroup :exec
 INSERT INTO groups
-  (id, ban_url, ban_question, ban_timeout)
-  VALUES ($1, $2, $3, $4)
+  (id, greeting, questions, ban_url, ban_question, ban_timeout)
+  VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (id) DO UPDATE SET
-  (ban_url, ban_question, ban_timeout) =
-  ROW(EXCLUDED.ban_url, EXCLUDED.ban_question, EXCLUDED.ban_timeout)
+  (greeting, questions, ban_url, ban_question, ban_timeout) =
+  ROW(EXCLUDED.greeting, EXCLUDED.questions, EXCLUDED.ban_url, EXCLUDED.ban_question, EXCLUDED.ban_timeout)
 `
 
-type CreateOrUpdateGroupParametersParams struct {
+type CreateOrUpdateGroupParams struct {
 	ID          int64
+	Greeting    sql.NullString
+	Questions   queries_types.QuestionsDB
 	BanUrl      sql.NullBool
 	BanQuestion sql.NullBool
 	BanTimeout  sql.NullInt32
 }
 
-func (q *Queries) CreateOrUpdateGroupParameters(ctx context.Context, arg CreateOrUpdateGroupParametersParams) error {
-	_, err := q.db.ExecContext(ctx, createOrUpdateGroupParameters,
+func (q *Queries) CreateOrUpdateGroup(ctx context.Context, arg CreateOrUpdateGroupParams) error {
+	_, err := q.db.ExecContext(ctx, createOrUpdateGroup,
 		arg.ID,
+		arg.Greeting,
+		arg.Questions,
 		arg.BanUrl,
 		arg.BanQuestion,
 		arg.BanTimeout,
 	)
-	return err
-}
-
-const createOrUpdateGroupQuestions = `-- name: CreateOrUpdateGroupQuestions :exec
-INSERT INTO groups
-  (id, greeting, questions)
-  VALUES ($1, $2, $3)
-ON CONFLICT (id) DO UPDATE SET
-  (greeting, questions) =
-  ROW(EXCLUDED.greeting, EXCLUDED.questions)
-`
-
-type CreateOrUpdateGroupQuestionsParams struct {
-	ID        int64
-	Greeting  sql.NullString
-	Questions queries_types.QuestionsDB
-}
-
-func (q *Queries) CreateOrUpdateGroupQuestions(ctx context.Context, arg CreateOrUpdateGroupQuestionsParams) error {
-	_, err := q.db.ExecContext(ctx, createOrUpdateGroupQuestions, arg.ID, arg.Greeting, arg.Questions)
 	return err
 }
 

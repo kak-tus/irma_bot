@@ -5,6 +5,9 @@ Unreleased v1.2.0
   - Update ll dependencies.
   - Build with ko and use github container registry.
   - Question protection enabled by default.
+  - API for frontend.
+  - Configuration from frontend.
+  - Removed configuration by commands.
 
 2020-10-11 v1.3.3
   - Fix start.

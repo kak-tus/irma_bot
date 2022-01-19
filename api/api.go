@@ -8,12 +8,14 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/goccy/go-json"
 	"github.com/kak-tus/irma_bot/model"
+	"github.com/kak-tus/irma_bot/storage"
 	"go.uber.org/zap"
 )
 
 type Options struct {
-	Log   *zap.SugaredLogger
-	Model *model.Model
+	Log     *zap.SugaredLogger
+	Model   *model.Model
+	Storage *storage.InstanceObj
 }
 
 type API struct {
@@ -21,6 +23,7 @@ type API struct {
 	log         *zap.SugaredLogger
 	model       *model.Model
 	router      *chi.Mux
+	storage     *storage.InstanceObj
 }
 
 func NewAPI(opts Options) (*API, error) {
@@ -39,9 +42,10 @@ func NewAPI(opts Options) (*API, error) {
 	router.Use(middleware.SetHeader("Content-Type", "application/json"))
 
 	hdl := &API{
-		log:    opts.Log,
-		model:  opts.Model,
-		router: router,
+		log:     opts.Log,
+		model:   opts.Model,
+		router:  router,
+		storage: opts.Storage,
 	}
 
 	httpHdl := HandlerFromMuxWithBaseURL(hdl, router, "/api/v1")

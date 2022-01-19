@@ -54,11 +54,19 @@ type Question struct {
 // Questions defines model for Questions.
 type Questions []Question
 
-// GroupID defines model for GroupID.
-type GroupID int64
+// TokenData defines model for TokenData.
+type TokenData struct {
+	Ttl string `json:"ttl"`
+}
+
+// Token defines model for Token.
+type Token string
 
 // GetGroupResponse defines model for GetGroupResponse.
 type GetGroupResponse Group
+
+// GetTokenResponse defines model for GetTokenResponse.
+type GetTokenResponse TokenData
 
 // HealthcheckResponse defines model for HealthcheckResponse.
 type HealthcheckResponse Healthcheck
@@ -69,14 +77,44 @@ type InternalErrorResponse Error
 // NotFoundErrorResponse defines model for NotFoundErrorResponse.
 type NotFoundErrorResponse Error
 
+// SaveGroupResponse defines model for SaveGroupResponse.
+type SaveGroupResponse map[string]interface{}
+
+// SaveGroupRequest defines model for SaveGroupRequest.
+type SaveGroupRequest Group
+
+// GetGroupParams defines parameters for GetGroup.
+type GetGroupParams struct {
+	Token Token `json:"token"`
+}
+
+// SaveGroupParams defines parameters for SaveGroup.
+type SaveGroupParams struct {
+	Token Token `json:"token"`
+}
+
+// GetTokenDataParams defines parameters for GetTokenData.
+type GetTokenDataParams struct {
+	Token Token `json:"token"`
+}
+
+// SaveGroupJSONRequestBody defines body for SaveGroup for application/json ContentType.
+type SaveGroupJSONRequestBody SaveGroupRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get group
-	// (GET /group/{id})
-	GetGroup(w http.ResponseWriter, r *http.Request, id GroupID)
+	// (GET /group)
+	GetGroup(w http.ResponseWriter, r *http.Request, params GetGroupParams)
+	// Save group
+	// (POST /group)
+	SaveGroup(w http.ResponseWriter, r *http.Request, params SaveGroupParams)
 	// Healthcheck
 	// (GET /healthcheck)
 	Healthcheck(w http.ResponseWriter, r *http.Request)
+	// Get token data
+	// (GET /token)
+	GetTokenData(w http.ResponseWriter, r *http.Request, params GetTokenDataParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -93,17 +131,59 @@ func (siw *ServerInterfaceWrapper) GetGroup(w http.ResponseWriter, r *http.Reque
 
 	var err error
 
-	// ------------- Path parameter "id" -------------
-	var id GroupID
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetGroupParams
 
-	err = runtime.BindStyledParameter("simple", false, "id", chi.URLParam(r, "id"), &id)
+	// ------------- Required query parameter "token" -------------
+	if paramValue := r.URL.Query().Get("token"); paramValue != "" {
+
+	} else {
+		http.Error(w, "Query argument token is required, but not found", http.StatusBadRequest)
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", r.URL.Query(), &params.Token)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid format for parameter id: %s", err), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Invalid format for parameter token: %s", err), http.StatusBadRequest)
 		return
 	}
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetGroup(w, r, id)
+		siw.Handler.GetGroup(w, r, params)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// SaveGroup operation middleware
+func (siw *ServerInterfaceWrapper) SaveGroup(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SaveGroupParams
+
+	// ------------- Required query parameter "token" -------------
+	if paramValue := r.URL.Query().Get("token"); paramValue != "" {
+
+	} else {
+		http.Error(w, "Query argument token is required, but not found", http.StatusBadRequest)
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", r.URL.Query(), &params.Token)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid format for parameter token: %s", err), http.StatusBadRequest)
+		return
+	}
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SaveGroup(w, r, params)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -119,6 +199,40 @@ func (siw *ServerInterfaceWrapper) Healthcheck(w http.ResponseWriter, r *http.Re
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.Healthcheck(w, r)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// GetTokenData operation middleware
+func (siw *ServerInterfaceWrapper) GetTokenData(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetTokenDataParams
+
+	// ------------- Required query parameter "token" -------------
+	if paramValue := r.URL.Query().Get("token"); paramValue != "" {
+
+	} else {
+		http.Error(w, "Query argument token is required, but not found", http.StatusBadRequest)
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", r.URL.Query(), &params.Token)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid format for parameter token: %s", err), http.StatusBadRequest)
+		return
+	}
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTokenData(w, r, params)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -166,10 +280,16 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/group/{id}", wrapper.GetGroup)
+		r.Get(options.BaseURL+"/group", wrapper.GetGroup)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/group", wrapper.SaveGroup)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/healthcheck", wrapper.Healthcheck)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/token", wrapper.GetTokenData)
 	})
 
 	return r
@@ -178,17 +298,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7RVTW/bPAz+KwHf96hV6cd28K3AvnIZ1l2LYlBsxlEbSypFdysK/fdBkmM7iYdkQ3fT",
-	"B8WHfPiIfIHSNs4aNOyheAGnSDXISGn3iWzrFu/jUhsowClegwCjGoQCdAUCCB9bTVhBwdSiAF+usVHx",
-	"xcpSozjaGX53BQL42WHeYo0EIYT43DtrPGY45IT4rTuMZ6U1jIbjUjm30aVibY2899bEswHuf8IVFPCf",
-	"HBKS+dbL5DUCBgGfUW14Xa6xfHh1nJHvDm1hGMmozQciS6+Ol7x2SF8sf7Stqf41UtjWOJXs2vgfSEk5",
-	"ZB0S61zK0hJhmUC7si+t3aAyEAQw/hzfeCZtashy2KrpNlvd9bKxy/voMIgOM8FoxsYfi72LMfSuFJF6",
-	"jvuc1UHwDXqvajwe4tZwKsqsuQPfS2W+P7boYw2m2YkWrBu0Le9/o8uLiW+UX7S0mXZXEyLH4A+zEfEL",
-	"n/JTBWxDPkr2TW+4T1ZqF300YpeJIYldAsbIUyyPf9yQ4HB/M6J6txBqUNFx8fg/lK3o3U8FfTMm8yQJ",
-	"92kciDjCa7Oy0UOFviTtcr5w/XURS6l5E80X1KjZ0vJsRakfVLN8/4Tks/352fxsHgGsQ6OchgIu05FI",
-	"fT/FKOuoavmiqxC3NSZCIq2pqSwqKPount4N0+R2OsPBRG6nTbjbmwsX8/nvCOrt5MHwCAKu5lfHH043",
-	"ziDg7Smw0w0+dcm2aRQ9Z0ZmdTeCBMj1rmYnSRzr+m/YmJpyu0HtzSoBHulpW6nUTWDN7HwhpaZGvVla",
-	"PuMHqZyWT+cQ7sKvAAAA//8MOxXlOwgAAA==",
+	"H4sIAAAAAAAC/8xWS2/jNhD+K8a0RyZyHu1BtxRtU1+Kpru3IFjQ0thmIpHKcORdI9B/X5DU05LhbNa7",
+	"yM0Wh/N983FeL5CYvDAaNVuIX6CQJHNkJP/vo3lC7X4oDTE8l0g7EKBljhAD+0MBhM+lIkwhZipRgE02",
+	"mEt3i3eFM7RMSq+hqqpgjJb/MKlCD/FBbvGWTFn8H07ct8RoRu1/yqLIVCJZGR09WuPJdAC/Eq4ghl+i",
+	"LogonNrIO+1AO4bhiy2MtoHCLXLNIHw8PYVKOBCv5slBvNc/Jcsa6B+UGW+SDSZPJ8fq+a7RFpqRtMz+",
+	"IjJ0cjzvtUb61/DfptTpj0fqpeQbUOqkN8tHTNh7rJqa8Nl2o+1nJF9rZAokrgshMUTuRudiaUyGUkMl",
+	"gPELT1VUP7fvg9WD2KcgakwPoxhze0yNmmPVupJEcuf+B51G5HO0Vq7xOMXGcIplKJeR76XUn3xrUEHq",
+	"sTrOglWOpvQirQzlkiEGpfnqElokpRnXISx3o6Rs2t2aENmRH0cjQKX7EL9fT0I0lI+Kfdca7oulUuix",
+	"EUMluiCGAvSRp1Tu1/A4XQXc9aQePoTssuh48thvTFvRup8ifdcX81Up3IYxkcRdyxzFyJwN3jeVjGcr",
+	"lWP3xoei4GyCurNSemWc0xRtQqoI4sLNfwvnU3Hm7BeUy9nS8GxFvtGks3C+RbLB/uJ8fj537E2BWhYK",
+	"YrjynwQUkjeefbRuSmiNXngXmm9UixTidtD5K92cv59WsjMJMwaqh73BeTmfH3qG1i4aTddKwPX8+vjF",
+	"6YZfCfjtNbDTg8n34jLPJe2CHrOgWCWgMHZCsnYWfJdmzc6zO8y7txZFo52oeovw4zH2fpR33BrpKwHR",
+	"ZtiUJrO337jeosfUYjRkNVxvBETc7L+HyqnrJD+5pIa75PsqKa/aLK1XUgEWaduo4ocubJgLG0eRolye",
+	"LQ2f81MkCxVtL6B6qL4GAAD//0Ja1WSUDAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

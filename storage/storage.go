@@ -1,17 +1,20 @@
 package storage
 
 import (
+	"math/rand"
 	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/cnf"
+	regen "github.com/zach-klippenstein/goregen"
 	"go.uber.org/zap"
 )
 
 type InstanceObj struct {
 	enc jsoniter.API
+	gen regen.Generator
 	log *zap.SugaredLogger
 	rdb *redis.ClusterClient
 }
@@ -45,8 +48,18 @@ func NewStorage(opts Options) (*InstanceObj, error) {
 		WriteTimeout: time.Minute,
 	})
 
+	arg := &regen.GeneratorArgs{
+		RngSource: rand.NewSource(time.Now().UnixNano()),
+	}
+
+	gen, err := regen.NewGenerator("[A-Za-z0-9]{128}", arg)
+	if err != nil {
+		return nil, err
+	}
+
 	inst := &InstanceObj{
 		enc: jsoniter.Config{UseNumber: true}.Froze(),
+		gen: gen,
 		log: opts.Log,
 		rdb: rdb,
 	}

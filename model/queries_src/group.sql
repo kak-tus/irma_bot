@@ -8,18 +8,10 @@ SELECT
 FROM public.groups
 WHERE id = $1;
 
--- name: CreateOrUpdateGroupQuestions :exec
+-- name: CreateOrUpdateGroup :exec
 INSERT INTO groups
-  (id, greeting, questions)
-  VALUES ($1, $2, $3)
+  (id, greeting, questions, ban_url, ban_question, ban_timeout)
+  VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (id) DO UPDATE SET
-  (greeting, questions) =
-  ROW(EXCLUDED.greeting, EXCLUDED.questions);
-
--- name: CreateOrUpdateGroupParameters :exec
-INSERT INTO groups
-  (id, ban_url, ban_question, ban_timeout)
-  VALUES ($1, $2, $3, $4)
-ON CONFLICT (id) DO UPDATE SET
-  (ban_url, ban_question, ban_timeout) =
-  ROW(EXCLUDED.ban_url, EXCLUDED.ban_question, EXCLUDED.ban_timeout);
+  (greeting, questions, ban_url, ban_question, ban_timeout) =
+  ROW(EXCLUDED.greeting, EXCLUDED.questions, EXCLUDED.ban_url, EXCLUDED.ban_question, EXCLUDED.ban_timeout);

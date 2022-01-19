@@ -17,15 +17,43 @@ paths:
         200:
           $ref: '#/components/responses/HealthcheckResponse'
 
-  /group/{id}:
+  /group:
     get:
       summary: Get group
       operationId: GetGroup
       parameters:
-        - $ref: '#/components/parameters/GroupID'
+        - $ref: '#/components/parameters/Token'
       responses:
         200:
           $ref: '#/components/responses/GetGroupResponse'
+        404:
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        500:
+          $ref: '#/components/responses/InternalErrorResponse'
+    post:
+      summary: Save group
+      operationId: SaveGroup
+      parameters:
+        - $ref: '#/components/parameters/Token'
+      requestBody:
+        $ref: '#/components/requestBodies/SaveGroupRequest'
+      responses:
+        200:
+          $ref: '#/components/responses/SaveGroupResponse'
+        404:
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        500:
+          $ref: '#/components/responses/InternalErrorResponse'
+
+  /token:
+    get:
+      summary: Get token data
+      operationId: GetTokenData
+      parameters:
+        - $ref: '#/components/parameters/Token'
+      responses:
+        200:
+          $ref: '#/components/responses/GetTokenResponse'
         404:
           $ref: '#/components/responses/NotFoundErrorResponse'
         500:
@@ -100,6 +128,15 @@ components:
         message:
           type: string
 
+    TokenData:
+      type: object
+      required:
+        - ttl
+      properties:
+        ttl:
+          type: string
+          format: date-fime
+
   responses:
     HealthcheckResponse:
       content:
@@ -125,11 +162,30 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
 
+    GetTokenResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenData'
+
+    SaveGroupResponse:
+      content:
+        application/json:
+          schema:
+            type: object
+
   parameters:
-    GroupID:
-      name: id
-      in: path
+    Token:
+      name: token
+      in: query
       required: true
       schema:
-        type: integer
-        format: int64
+        type: string
+
+  requestBodies:
+    SaveGroupRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Group'

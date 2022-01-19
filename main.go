@@ -52,8 +52,9 @@ func main() {
 	}
 
 	apiOpts := api.Options{
-		Log:   log,
-		Model: model,
+		Log:     log,
+		Model:   model,
+		Storage: stor,
 	}
 
 	apiHdl, err := api.NewAPI(apiOpts)

@@ -2,32 +2,23 @@ package telegram
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"strings"
+	"net/url"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/kak-tus/irma_bot/model/queries"
-	"github.com/kak-tus/irma_bot/model/queries_types"
 )
+
+// const (
+// 	greetingLimit = 1000
+// 	questionLimit = 100
+// 	answerLimit   = 50
+// )
 
 const (
-	setText       = "AntiSpam protection enabled"
-	greetingLimit = 1000
-	questionLimit = 100
-	answerLimit   = 50
+	onlyAdminText       = "I accept messages only from admin."
+	privateDisabledText = "I can't send private message with configuration url to you. Please start private chat with me."
+	tokenText           = "Configuration URL %s"
 )
-
-const failTextTemplate = `
-Can't parse your message.
-
-Must be set greeting, at least one question, at least one correct answer and at least one incorrect answer.
-
-Greeting, questions and answers has length limit.
-Greeting - %d characters, question - %d, answer - %d.
-`
-
-var failText = fmt.Sprintf(failTextTemplate, greetingLimit, questionLimit, answerLimit)
 
 func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) error {
 	isAdm, err := o.isAdmin(msg.Chat.ID, msg.From.ID)
@@ -36,141 +27,50 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 	}
 
 	if !isAdm {
+		respMsg := tgbotapi.NewMessage(msg.Chat.ID, onlyAdminText)
+
+		respMsg.ReplyToMessageID = msg.MessageID
+
+		_, err = o.bot.Send(respMsg)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}
 
-	wasCommand, err := o.processCommands(ctx, msg)
+	token, err := o.stor.NewToken(ctx, msg.Chat.ID)
 	if err != nil {
 		return err
 	}
 
-	if wasCommand {
-		return nil
-	}
-
-	parsed, greeting, questions, err := o.parseQuestions(msg.Text)
+	u, err := url.Parse(o.cnf.URL)
 	if err != nil {
 		return err
 	}
 
-	var resp tgbotapi.MessageConfig
+	qry := u.Query()
+	qry.Add("token", token)
 
-	if !parsed {
-		resp = tgbotapi.NewMessage(msg.Chat.ID, failText)
-	} else {
-		resp = tgbotapi.NewMessage(msg.Chat.ID, setText)
-	}
+	u.RawQuery = qry.Encode()
 
-	_, err = o.bot.Send(resp)
-	if err != nil {
-		return err
-	}
+	tokenTextWithUrl := fmt.Sprintf(tokenText, u.String())
 
-	if !parsed {
+	respMsg := tgbotapi.NewMessage(msg.From.ID, tokenTextWithUrl)
+
+	_, err = o.bot.Request(respMsg)
+	if err == nil {
 		return nil
 	}
 
-	group := queries.CreateOrUpdateGroupQuestionsParams{
-		ID:        msg.Chat.ID,
-		Greeting:  sql.NullString{Valid: true, String: greeting},
-		Questions: queries_types.QuestionsDB{Questions: questions},
-	}
+	respMsg = tgbotapi.NewMessage(msg.Chat.ID, privateDisabledText)
 
-	err = o.model.Queries.CreateOrUpdateGroupQuestions(ctx, group)
+	_, err = o.bot.Send(respMsg)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (o *InstanceObj) parseQuestions(txt string) (bool, string, []queries_types.Question, error) {
-	// @ + name + " "
-	// @ + name + "\n"
-	l := 1 + len(o.cnf.BotName) + 1
-
-	if len(txt) <= l {
-		return false, "", nil, nil
-	}
-
-	// Cut bot name
-	txt = txt[l:]
-
-	var greeting string
-
-	questions := make([]queries_types.Question, 0)
-
-	lines := strings.Split(txt, "\n")
-
-	for _, ln := range lines {
-		if strings.Contains(ln, "?") && strings.Contains(ln, ";") && strings.Contains(ln, "+") {
-			pos := strings.Index(ln, "?")
-
-			if len(ln) <= pos+1 {
-				continue
-			}
-
-			question := strings.TrimSpace(ln[:pos])
-			answers := ln[pos+1:]
-
-			if len(question) > questionLimit {
-				continue
-			}
-
-			answ := strings.Split(answers, ";")
-			if len(answ) < 2 {
-				continue
-			}
-
-			answParsed := make([]queries_types.Answer, 0, len(answ))
-
-			var hasCorrect bool
-
-			for _, a := range answ {
-				if len(a) > answerLimit {
-					continue
-				}
-
-				if strings.HasPrefix(a, "+") {
-					if len(a) > 1 {
-						hasCorrect = true
-
-						answParsed = append(answParsed, queries_types.Answer{
-							Correct: 1,
-							Text:    strings.TrimSpace(a[1:]),
-						})
-					}
-				} else {
-					answParsed = append(answParsed, queries_types.Answer{
-						Text: strings.TrimSpace(a),
-					})
-				}
-			}
-
-			if !hasCorrect {
-				continue
-			}
-
-			if len(answParsed) == 0 {
-				continue
-			}
-
-			q := queries_types.Question{
-				Answers: answParsed,
-				Text:    question,
-			}
-
-			questions = append(questions, q)
-		} else {
-			greeting += strings.TrimSpace(ln) + "\n"
-		}
-	}
-
-	if greeting == "" || len(greeting) > greetingLimit || len(questions) == 0 {
-		return false, "", nil, nil
-	}
-
-	return true, greeting, questions, nil
 }
 
 func (o *InstanceObj) isAdmin(chatID int64, userID int64) (bool, error) {
