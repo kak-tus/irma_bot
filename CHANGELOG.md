@@ -1,4 +1,4 @@
-2022-01-19 v1.2.0
+2022-01-19 v1.4.0
   - Switch to only env config.
   - Change env name from IRMA_STORAGE_REDISADDRS to IRMA_STORAGE_REDIS_ADDRS.
   - Switch to codegened database code.
