@@ -123,33 +123,33 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		greet = gr.Greeting.String
 	}
 
-	for _, m := range msg.NewChatMembers {
+	for _, newMember := range msg.NewChatMembers {
 		o.log.Infow("Newbie found, send question",
-			"User", m.FirstName,
+			"User", newMember.FirstName,
 			"Chat", msg.Chat.ID,
 		)
 
 		qID := rand.Intn(len(quest))
 
 		var name string
-		if m.UserName != "" {
-			name = m.UserName
+		if newMember.UserName != "" {
+			name = newMember.UserName
 		} else {
-			name = m.FirstName
+			name = newMember.FirstName
 
-			if m.LastName != "" {
-				name += " " + m.LastName
+			if newMember.LastName != "" {
+				name += " " + newMember.LastName
 			}
 		}
 
 		txt := fmt.Sprintf("@%s %s\n\n%s", name, greet, quest[qID].Text)
 
-		resp := tgbotapi.NewMessage(msg.Chat.ID, txt)
+		resp := tgbotapi.NewMessage(newMember.ID, txt)
 
 		btns := make([][]tgbotapi.InlineKeyboardButton, len(quest[qID].Answers))
 
 		for i, a := range quest[qID].Answers {
-			id := fmt.Sprintf("%d_%d_%d_%d", m.ID, msg.Chat.ID, qID, i)
+			id := fmt.Sprintf("%d_%d_%d_%d", newMember.ID, msg.Chat.ID, qID, i)
 			btns[i] = []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData(a.Text, id)}
 		}
 
@@ -169,13 +169,13 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 			ChatID:    res.Chat.ID,
 			Type:      storage.ActionTypeDelete,
 			MessageID: res.MessageID,
-			UserID:    int(m.ID),
+			UserID:    int(newMember.ID),
 		}
 		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
 		}
 
-		err = o.stor.SetKicked(ctx, msg.Chat.ID, int(m.ID), banTimeout)
+		err = o.stor.SetKicked(ctx, msg.Chat.ID, int(newMember.ID), banTimeout)
 		if err != nil {
 			return err
 		}
@@ -184,7 +184,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 			ChatID:    msg.Chat.ID,
 			Type:      storage.ActionTypeDelete,
 			MessageID: msg.MessageID,
-			UserID:    int(m.ID),
+			UserID:    int(newMember.ID),
 		}
 		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
@@ -193,7 +193,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		act = storage.Action{
 			ChatID: msg.Chat.ID,
 			Type:   storage.ActionTypeKick,
-			UserID: int(m.ID),
+			UserID: int(newMember.ID),
 		}
 		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
