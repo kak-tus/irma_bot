@@ -8,51 +8,8 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/storage"
 )
-
-const defaultGreeting = `
-Hello. This group has AntiSpam protection.
-You must get correct answer to next question in one minute or you will be kicked.
-In case of incorrect answer you can try join group after one day.
-`
-
-const defaultBanTimeout = time.Minute
-
-var defaultQuestions = []Question{
-	{
-		Answers: []Answer{
-			{
-				Correct: 1,
-				Text:    "Correct answer 1",
-			},
-			{
-				Text: "Incorrect answer 1",
-			},
-			{
-				Text: "Incorrect answer 2",
-			},
-		},
-		Text: "Question 1",
-	},
-	{
-		Answers: []Answer{
-			{
-				Correct: 1,
-				Text:    "Correct answer 1",
-			},
-			{
-				Correct: 1,
-				Text:    "Correct answer 2",
-			},
-			{
-				Text: "Incorrect answer 1",
-			},
-		},
-		Text: "Question 2",
-	},
-}
 
 func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Message) error {
 	var ban bool
@@ -136,6 +93,8 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		return err
 	}
 
+	defaultGroup := o.model.GetDefaultGroup()
+
 	for _, m := range msg.NewChatMembers {
 		o.log.Infow("Newbie found, add messages",
 			"User", m.FirstName,
@@ -153,14 +112,11 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		return nil
 	}
 
-	quest := defaultQuestions
-	greet := defaultGreeting
+	quest := defaultGroup.Questions.Questions
+	greet := defaultGroup.Greeting.String
 
-	if len(gr.Questions) != 0 {
-		err := jsoniter.Unmarshal(gr.Questions, &quest)
-		if err != nil {
-			return err
-		}
+	if len(gr.Questions.Questions) != 0 {
+		quest = gr.Questions.Questions
 	}
 
 	if gr.Greeting.Valid {
@@ -204,7 +160,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 			return err
 		}
 
-		banTimeout := defaultBanTimeout
+		banTimeout := time.Duration(defaultGroup.BanTimeout.Int32) * time.Minute
 		if gr.BanTimeout.Valid {
 			banTimeout = time.Duration(gr.BanTimeout.Int32) * time.Minute
 		}

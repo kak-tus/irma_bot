@@ -4,7 +4,8 @@ package queries
 
 import (
 	"database/sql"
-	"encoding/json"
+
+	"github.com/kak-tus/irma_bot/model/queries_types"
 )
 
 // Group data.
@@ -14,7 +15,7 @@ type Group struct {
 	// Greeting.
 	Greeting sql.NullString
 	// Questions and answers.
-	Questions json.RawMessage
+	Questions queries_types.QuestionsDB
 	// Ban by postings urls and forwards.
 	BanUrl sql.NullBool
 	// Ban by question.

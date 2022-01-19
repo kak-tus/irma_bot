@@ -6,7 +6,8 @@ package queries
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+
+	"github.com/kak-tus/irma_bot/model/queries_types"
 )
 
 const createOrUpdateGroupParameters = `-- name: CreateOrUpdateGroupParameters :exec
@@ -47,7 +48,7 @@ ON CONFLICT (id) DO UPDATE SET
 type CreateOrUpdateGroupQuestionsParams struct {
 	ID        int64
 	Greeting  sql.NullString
-	Questions json.RawMessage
+	Questions queries_types.QuestionsDB
 }
 
 func (q *Queries) CreateOrUpdateGroupQuestions(ctx context.Context, arg CreateOrUpdateGroupQuestionsParams) error {
@@ -70,7 +71,7 @@ type GetGroupRow struct {
 	BanQuestion sql.NullBool
 	BanUrl      sql.NullBool
 	Greeting    sql.NullString
-	Questions   json.RawMessage
+	Questions   queries_types.QuestionsDB
 	BanTimeout  sql.NullInt32
 }
 

@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/model/queries"
+	"github.com/kak-tus/irma_bot/model/queries_types"
 )
 
 const (
@@ -28,16 +28,6 @@ Greeting - %d characters, question - %d, answer - %d.
 `
 
 var failText = fmt.Sprintf(failTextTemplate, greetingLimit, questionLimit, answerLimit)
-
-type Answer struct {
-	Correct int16  `json:"correct"`
-	Text    string `json:"text"`
-}
-
-type Question struct {
-	Answers []Answer `json:"answers"`
-	Text    string   `json:"text"`
-}
 
 func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) error {
 	isAdm, err := o.isAdmin(msg.Chat.ID, msg.From.ID)
@@ -80,15 +70,10 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 		return nil
 	}
 
-	encoded, err := jsoniter.Marshal(questions)
-	if err != nil {
-		return err
-	}
-
 	group := queries.CreateOrUpdateGroupQuestionsParams{
 		ID:        msg.Chat.ID,
 		Greeting:  sql.NullString{Valid: true, String: greeting},
-		Questions: encoded,
+		Questions: queries_types.QuestionsDB{Questions: questions},
 	}
 
 	err = o.model.Queries.CreateOrUpdateGroupQuestions(ctx, group)
@@ -99,10 +84,10 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 	return nil
 }
 
-func (o *InstanceObj) parseQuestions(txt string) (bool, string, []Question, error) {
+func (o *InstanceObj) parseQuestions(txt string) (bool, string, []queries_types.Question, error) {
 	// @ + name + " "
 	// @ + name + "\n"
-	l := 1 + len(o.cnf.Telegram.BotName) + 1
+	l := 1 + len(o.cnf.BotName) + 1
 
 	if len(txt) <= l {
 		return false, "", nil, nil
@@ -113,7 +98,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []Question, erro
 
 	var greeting string
 
-	questions := make([]Question, 0)
+	questions := make([]queries_types.Question, 0)
 
 	lines := strings.Split(txt, "\n")
 
@@ -137,7 +122,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []Question, erro
 				continue
 			}
 
-			answParsed := make([]Answer, 0, len(answ))
+			answParsed := make([]queries_types.Answer, 0, len(answ))
 
 			var hasCorrect bool
 
@@ -150,13 +135,13 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []Question, erro
 					if len(a) > 1 {
 						hasCorrect = true
 
-						answParsed = append(answParsed, Answer{
+						answParsed = append(answParsed, queries_types.Answer{
 							Correct: 1,
 							Text:    strings.TrimSpace(a[1:]),
 						})
 					}
 				} else {
-					answParsed = append(answParsed, Answer{
+					answParsed = append(answParsed, queries_types.Answer{
 						Text: strings.TrimSpace(a),
 					})
 				}
@@ -170,7 +155,7 @@ func (o *InstanceObj) parseQuestions(txt string) (bool, string, []Question, erro
 				continue
 			}
 
-			q := Question{
+			q := queries_types.Question{
 				Answers: answParsed,
 				Text:    question,
 			}

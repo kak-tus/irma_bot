@@ -4,15 +4,14 @@ import (
 	"testing"
 
 	"github.com/kak-tus/irma_bot/cnf"
+	"github.com/kak-tus/irma_bot/model/queries_types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestParseQuestions(t *testing.T) {
 	o := InstanceObj{
-		cnf: &cnf.Cnf{
-			Telegram: cnf.Tg{
-				BotName: "test",
-			},
+		cnf: cnf.Tg{
+			BotName: "test",
 		},
 	}
 
@@ -30,9 +29,9 @@ func TestParseQuestions(t *testing.T) {
 	require.True(t, parsed, "must be parsed")
 	require.Equal(t, greet, greeting)
 
-	require.Equal(t, []Question{
+	require.Equal(t, []queries_types.Question{
 		{
-			Answers: []Answer{
+			Answers: []queries_types.Answer{
 				{Correct: 1, Text: "Белград"},
 				{Correct: 0, Text: "Рашка"},
 				{Correct: 0, Text: "Сараево"},

@@ -6,5 +6,7 @@ packages:
     schema: "./migrations"
     engine: "postgresql"
 overrides:
-  - go_type: "github.com/gofrs/uuid.UUID"
-    db_type: "uuid"
+  - db_type: "uuid"
+    go_type: "github.com/gofrs/uuid.UUID"
+  - column: "public.groups.questions"
+    go_type: "github.com/kak-tus/irma_bot/model/queries_types.QuestionsDB"

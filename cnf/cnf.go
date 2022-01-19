@@ -6,11 +6,11 @@ type Cnf struct {
 	DB       DB
 	Telegram Tg
 	Storage  Stor
+	Listen   string `default:":8080"`
 }
 
 type Tg struct {
 	BotName string
-	Listen  string `default:":8080"`
 	Path    string
 	Proxy   string
 	Token   string

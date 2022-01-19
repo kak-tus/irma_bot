@@ -10,7 +10,6 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/irma_bot/storage"
 )
 
@@ -80,7 +79,7 @@ func (o *InstanceObj) process(ctx context.Context, msg tgbotapi.Update) error {
 }
 
 func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) error {
-	textWithBotName := strings.ReplaceAll(usageText, botNameTemplate, o.cnf.Telegram.BotName)
+	textWithBotName := strings.ReplaceAll(usageText, botNameTemplate, o.cnf.BotName)
 
 	if msg.Chat.IsPrivate() {
 		resp := tgbotapi.NewMessage(msg.Chat.ID, textWithBotName)
@@ -154,7 +153,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 		return o.newMembers(ctx, msg)
 	}
 
-	name := fmt.Sprintf("@%s", o.cnf.Telegram.BotName)
+	name := fmt.Sprintf("@%s", o.cnf.BotName)
 
 	if strings.HasPrefix(msg.Text, name) {
 		return o.messageToBot(ctx, msg)
@@ -189,17 +188,16 @@ func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callbac
 		return err
 	}
 
+	defaultGroup := o.model.GetDefaultGroup()
+
 	questionID, err := strconv.Atoi(tkns[2])
 	if err != nil {
 		return err
 	}
 
-	quest := defaultQuestions
-	if len(gr.Questions) != 0 {
-		err := jsoniter.Unmarshal(gr.Questions, &quest)
-		if err != nil {
-			return err
-		}
+	quest := defaultGroup.Questions.Questions
+	if len(gr.Questions.Questions) != 0 {
+		quest = gr.Questions.Questions
 	}
 
 	if questionID >= len(quest) {

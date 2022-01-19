@@ -10,8 +10,19 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewStorage(c *cnf.Cnf, log *zap.SugaredLogger) (*InstanceObj, error) {
-	addrs := strings.Split(c.Storage.RedisAddrs, ",")
+type InstanceObj struct {
+	enc jsoniter.API
+	log *zap.SugaredLogger
+	rdb *redis.ClusterClient
+}
+
+type Options struct {
+	Log    *zap.SugaredLogger
+	Config cnf.Stor
+}
+
+func NewStorage(opts Options) (*InstanceObj, error) {
+	addrs := strings.Split(opts.Config.RedisAddrs, ",")
 
 	var (
 		parsed []string
@@ -35,9 +46,8 @@ func NewStorage(c *cnf.Cnf, log *zap.SugaredLogger) (*InstanceObj, error) {
 	})
 
 	inst := &InstanceObj{
-		cnf: c,
 		enc: jsoniter.Config{UseNumber: true}.Froze(),
-		log: log,
+		log: opts.Log,
 		rdb: rdb,
 	}
 
