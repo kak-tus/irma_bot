@@ -1,8 +1,8 @@
-Unreleased v1.2.0
+2022-01-19 v1.2.0
   - Switch to only env config.
-  - Change env name from IRMA_REDIS_ADDRS to IRMA_STORAGE_REDIS_ADDRS.
+  - Change env name from IRMA_STORAGE_REDISADDRS to IRMA_STORAGE_REDIS_ADDRS.
   - Switch to codegened database code.
-  - Update ll dependencies.
+  - Update all dependencies.
   - Build with ko and use github container registry.
   - Question protection enabled by default.
   - API for frontend.
