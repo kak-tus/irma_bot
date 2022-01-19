@@ -83,7 +83,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    cnf.Listen,
-		Handler: apiHdl.GetHTTPHandler(),
+		Handler: apiHdl.GetHTTPRouter(),
 	}
 
 	go func() {

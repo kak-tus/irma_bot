@@ -21,11 +21,10 @@ type Options struct {
 }
 
 type API struct {
-	httpHandler http.Handler
-	log         *zap.SugaredLogger
-	model       *model.Model
-	router      *chi.Mux
-	storage     *storage.InstanceObj
+	log     *zap.SugaredLogger
+	model   *model.Model
+	router  *chi.Mux
+	storage *storage.InstanceObj
 }
 
 func NewAPI(opts Options) (*API, error) {
@@ -64,17 +63,12 @@ func NewAPI(opts Options) (*API, error) {
 		},
 	}
 
-	router.Use(oapimiddware.OapiRequestValidator(swagger))
-
-	httpHdl := HandlerFromMuxWithBaseURL(hdl, router, "/api/v1")
-
-	hdl.httpHandler = httpHdl
+	router.Route("/api/v1", func(r chi.Router) {
+		r.Use(oapimiddware.OapiRequestValidator(swagger))
+		_ = HandlerFromMux(hdl, r)
+	})
 
 	return hdl, nil
-}
-
-func (hdl *API) GetHTTPHandler() http.Handler {
-	return hdl.httpHandler
 }
 
 func (hdl *API) GetHTTPRouter() *chi.Mux {

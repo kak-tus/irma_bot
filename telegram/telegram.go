@@ -81,7 +81,10 @@ func (o *InstanceObj) Start() error {
 	// HACK TODO
 	// We must register our handler again in internal router
 	// May be better switch telegram to other port from api?
-	o.router.Handle("/"+o.cnf.Path, http.DefaultServeMux)
+	// o.router.Mount("/"+o.cnf.Path, http.DefaultServeMux)
+	o.router.Route("/", func(r chi.Router) {
+		r.Handle("/"+o.cnf.Path, http.DefaultServeMux)
+	})
 
 	o.lock.Add(1)
 	defer o.lock.Done()

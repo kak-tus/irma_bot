@@ -1,3 +1,6 @@
+2022-01-20 v1.4.2
+  - Fix validation.
+
 2022-01-20 v1.4.1
   - Bring back lengths validations.
 
