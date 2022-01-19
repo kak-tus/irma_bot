@@ -8,12 +8,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-// const (
-// 	greetingLimit = 1000
-// 	questionLimit = 100
-// 	answerLimit   = 50
-// )
-
 const (
 	onlyAdminText       = "I accept messages only from admin."
 	privateDisabledText = "I can't send private message with configuration url to you. Please start private chat with me."

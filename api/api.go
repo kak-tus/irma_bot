@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	oapimiddware "github.com/deepmap/oapi-codegen/pkg/chi-middleware"
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -47,6 +49,22 @@ func NewAPI(opts Options) (*API, error) {
 		router:  router,
 		storage: opts.Storage,
 	}
+
+	swagger, err := GetSwagger()
+	if err != nil {
+		return nil, err
+	}
+
+	// https://github.com/deepmap/oapi-codegen/blob/master/examples/petstore-expanded/echo/petstore.go#L29
+	// Also add path part - this need to recognize requests
+	// TODO FIX hardcode
+	swagger.Servers = openapi3.Servers{
+		&openapi3.Server{
+			URL: "http:///api/v1",
+		},
+	}
+
+	router.Use(oapimiddware.OapiRequestValidator(swagger))
 
 	httpHdl := HandlerFromMuxWithBaseURL(hdl, router, "/api/v1")
 

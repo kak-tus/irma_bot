@@ -1,3 +1,6 @@
+2022-01-20 v1.4.1
+  - Bring back lengths validations.
+
 2022-01-19 v1.4.0
   - Switch to only env config.
   - Change env name from IRMA_STORAGE_REDISADDRS to IRMA_STORAGE_REDIS_ADDRS.
