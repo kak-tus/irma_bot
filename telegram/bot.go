@@ -11,7 +11,8 @@ import (
 const (
 	onlyAdminText       = "I accept messages only from admin."
 	privateDisabledText = "I can't send private message with configuration url to you. Please start private chat with me."
-	tokenText           = "Configuration URL %s"
+	tokenText           = "Configuration URL %s."
+	privateOkText       = "I sent private message with configuration url in private chat with you."
 )
 
 func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) error {
@@ -52,12 +53,14 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 
 	respMsg := tgbotapi.NewMessage(msg.From.ID, tokenTextWithUrl)
 
+	text := privateDisabledText
+
 	_, err = o.bot.Request(respMsg)
 	if err == nil {
-		return nil
+		text = privateOkText
 	}
 
-	respMsg = tgbotapi.NewMessage(msg.Chat.ID, privateDisabledText)
+	respMsg = tgbotapi.NewMessage(msg.Chat.ID, text)
 
 	_, err = o.bot.Send(respMsg)
 	if err != nil {

@@ -1,3 +1,6 @@
+2022-01-20 v1.4.4
+  - Send success message about config url in public chat too.
+
 2022-01-20 v1.4.3
   - Fix broken question protection.
 
