@@ -1,4 +1,4 @@
-2022-01-20 v1.4.2
+2022-01-20 v1.4.3
   - Fix broken question protection.
 
 2022-01-20 v1.4.2
