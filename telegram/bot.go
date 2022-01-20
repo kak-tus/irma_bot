@@ -62,6 +62,8 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 
 	respMsg = tgbotapi.NewMessage(msg.Chat.ID, text)
 
+	respMsg.ReplyToMessageID = msg.MessageID
+
 	_, err = o.bot.Send(respMsg)
 	if err != nil {
 		return err
