@@ -12,7 +12,7 @@ const (
 	onlyAdminText       = "I accept messages only from admin."
 	privateDisabledText = "I can't send private message with configuration url to you. Please start private chat with me."
 	tokenText           = "Configuration URL %s."
-	privateOkText       = "I sent private message with configuration url in private chat with you."
+	privateOkText       = "I sent message with configuration url in private chat with you."
 )
 
 func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) error {

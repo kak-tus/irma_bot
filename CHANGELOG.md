@@ -1,3 +1,6 @@
+2022-01-20 v1.4.5
+  - Improve message.
+
 2022-01-20 v1.4.4
   - Send success message about config url in public chat too.
 
