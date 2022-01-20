@@ -144,7 +144,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 
 		txt := fmt.Sprintf("@%s %s\n\n%s", name, greet, quest[qID].Text)
 
-		resp := tgbotapi.NewMessage(newMember.ID, txt)
+		resp := tgbotapi.NewMessage(msg.Chat.ID, txt)
 
 		btns := make([][]tgbotapi.InlineKeyboardButton, len(quest[qID].Answers))
 
