@@ -4,59 +4,71 @@ info:
   title: Irma bot frontend API
   description: API
   version: '1.0.0'
+  contact:
+    name: Andrey Kuzmin
 
 servers:
   - url: https://irma-bot.tk/api/v1
 
+tags:
+  - name: info
+  - name: group
+  - name: auth
+
 paths:
   /healthcheck:
     get:
-      summary: Healthcheck
+      description: Healthcheck
       operationId: Healthcheck
+      tags: ['info']
       responses:
-        200:
+        '200':
           $ref: '#/components/responses/HealthcheckResponse'
 
   /group:
     get:
-      summary: Get group
+      description: Get group
       operationId: GetGroup
+      tags: ['group']
       parameters:
         - $ref: '#/components/parameters/Token'
       responses:
-        200:
+        '200':
           $ref: '#/components/responses/GetGroupResponse'
-        404:
+        '404':
           $ref: '#/components/responses/NotFoundErrorResponse'
-        500:
+        '500':
           $ref: '#/components/responses/InternalErrorResponse'
+
     post:
-      summary: Save group
+      description: Save group
       operationId: SaveGroup
+      tags: ['group']
       parameters:
         - $ref: '#/components/parameters/Token'
       requestBody:
         $ref: '#/components/requestBodies/SaveGroupRequest'
       responses:
-        200:
+        '200':
           $ref: '#/components/responses/SaveGroupResponse'
-        404:
+        '404':
           $ref: '#/components/responses/NotFoundErrorResponse'
-        500:
+        '500':
           $ref: '#/components/responses/InternalErrorResponse'
 
   /token:
     get:
-      summary: Get token data
+      description: Get token data
       operationId: GetTokenData
+      tags: ['auth']
       parameters:
         - $ref: '#/components/parameters/Token'
       responses:
-        200:
+        '200':
           $ref: '#/components/responses/GetTokenResponse'
-        404:
+        '404':
           $ref: '#/components/responses/NotFoundErrorResponse'
-        500:
+        '500':
           $ref: '#/components/responses/InternalErrorResponse'
 
 components:
@@ -151,36 +163,42 @@ components:
 
   responses:
     HealthcheckResponse:
+      description: HealthcheckResponse
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Healthcheck'
 
     GetGroupResponse:
+      description: GetGroupResponse
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Group'
 
     NotFoundErrorResponse:
+      description: NotFoundErrorResponse
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
 
     InternalErrorResponse:
+      description: InternalErrorResponse
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
 
     GetTokenResponse:
+      description: GetTokenResponse
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/TokenData'
 
     SaveGroupResponse:
+      description: SaveGroupResponse
       content:
         application/json:
           schema:
