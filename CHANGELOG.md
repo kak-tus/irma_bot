@@ -1,3 +1,6 @@
+Unreleased
+  - Fix openapi linter warnings.
+
 2022-01-20 v1.4.6
   - Reply to in message.
 
