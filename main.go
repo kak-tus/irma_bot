@@ -16,7 +16,7 @@ import (
 )
 
 //go:generate sqlc generate
-//go:generate oapi-codegen -generate types,chi-server,spec,skip-prune -package api -o api/api.gen.go openapi.yml
+//go:generate oapi-codegen --config openapi-codegen.yml openapi.yml
 
 func main() {
 	logger, err := zap.NewProduction()
