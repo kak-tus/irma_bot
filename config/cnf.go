@@ -1,4 +1,4 @@
-package cnf
+package config
 
 import "github.com/kelseyhightower/envconfig"
 

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/kak-tus/irma_bot/api"
-	"github.com/kak-tus/irma_bot/cnf"
+	"github.com/kak-tus/irma_bot/config"
 	"github.com/kak-tus/irma_bot/model"
 	"github.com/kak-tus/irma_bot/storage"
 	"github.com/kak-tus/irma_bot/telegram"
@@ -26,7 +26,7 @@ func main() {
 
 	log := logger.Sugar()
 
-	cnf, err := cnf.NewConf()
+	cnf, err := config.NewConf()
 	if err != nil {
 		log.Panic(err)
 	}
@@ -36,7 +36,7 @@ func main() {
 		URL: cnf.DB.Addr,
 	}
 
-	model, err := model.NewModel(modelOpts)
+	modelHdl, err := model.NewModel(modelOpts)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -53,7 +53,7 @@ func main() {
 
 	apiOpts := api.Options{
 		Log:     log,
-		Model:   model,
+		Model:   modelHdl,
 		Storage: stor,
 	}
 
@@ -65,7 +65,7 @@ func main() {
 	telegramOpts := telegram.Options{
 		Log:     log,
 		Config:  cnf.Telegram,
-		Model:   model,
+		Model:   modelHdl,
 		Router:  apiHdl.GetHTTPRouter(),
 		Storage: stor,
 	}

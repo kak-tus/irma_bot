@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/kak-tus/irma_bot/cnf"
+	"github.com/kak-tus/irma_bot/config"
 	regen "github.com/zach-klippenstein/goregen"
 	"go.uber.org/zap"
 )
@@ -21,7 +21,7 @@ type InstanceObj struct {
 
 type Options struct {
 	Log    *zap.SugaredLogger
-	Config cnf.Stor
+	Config config.Stor
 }
 
 func NewStorage(opts Options) (*InstanceObj, error) {

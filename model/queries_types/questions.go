@@ -23,7 +23,7 @@ type QuestionsDB struct {
 	Questions Questions
 }
 
-func (container *QuestionsDB) Scan(value interface{}) error {
+func (container *QuestionsDB) Scan(value any) error {
 	if value == nil {
 		container.Questions = nil
 		return nil

@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/kak-tus/irma_bot/cnf"
+	"github.com/kak-tus/irma_bot/config"
 	"github.com/kak-tus/irma_bot/model"
 	"github.com/kak-tus/irma_bot/storage"
 	"go.uber.org/zap"
@@ -19,7 +19,7 @@ import (
 
 type InstanceObj struct {
 	bot    *tgbotapi.BotAPI
-	cnf    cnf.Tg
+	cnf    config.Tg
 	lock   *sync.WaitGroup
 	log    *zap.SugaredLogger
 	model  *model.Model
@@ -29,7 +29,7 @@ type InstanceObj struct {
 }
 
 type Options struct {
-	Config  cnf.Tg
+	Config  config.Tg
 	Log     *zap.SugaredLogger
 	Model   *model.Model
 	Router  *chi.Mux
@@ -131,20 +131,20 @@ func (o *InstanceObj) deleteMessage(chatID int64, messageID int) error {
 
 	if _, err := o.bot.Request(del); err != nil {
 		ex, ok := err.(tgbotapi.Error)
-		if ok && ex.Message == "Bad Request: message to delete not found" {
-			o.log.Warnw("Message in chat is already deleted",
-				"Chat", chatID,
-				"Message", messageID,
-			)
-		} else {
+		if !(ok && ex.Message == "Bad Request: message to delete not found") {
 			return err
 		}
+
+		o.log.Warnw("Message in chat is already deleted",
+			"Chat", chatID,
+			"Message", messageID,
+		)
 	}
 
 	return nil
 }
 
-func getClient(cnf cnf.Tg) (*http.Client, error) {
+func getClient(cnf config.Tg) (*http.Client, error) {
 	httpTransport := &http.Transport{}
 
 	if cnf.Proxy != "" {

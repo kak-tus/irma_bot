@@ -2,7 +2,7 @@ package api
 
 import (
 	"database/sql"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/goccy/go-json"
@@ -101,7 +101,7 @@ func (hdl *API) SaveGroup(w http.ResponseWriter, r *http.Request, params SaveGro
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		hdl.errorInternal(w, err, "internal error")
 		return
