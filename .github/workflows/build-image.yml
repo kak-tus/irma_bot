@@ -30,7 +30,7 @@ jobs:
       - name: Setup ko
         uses: imjasonh/setup-ko@v0.4
         with:
-          version: v0.9.3
+          version: v0.11.2
 
       - name: Build
         run: |
