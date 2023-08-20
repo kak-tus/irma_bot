@@ -1,0 +1,31 @@
+name: Test
+
+on:
+  push:
+    branches: [master]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup ko
+        uses: imjasonh/setup-ko@v0.4
+        with:
+          version: v0.9.3
+
+      - name: Build
+        run: |
+          export KO_DOCKER_REPO="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          ko build --bare --push=false .
