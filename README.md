@@ -1,7 +1,7 @@
 # @irma_bot
 
-[![Build Status](https://travis-ci.org/kak-tus/irma_bot.svg?branch=master)](https://travis-ci.org/kak-tus/irma_bot)
-![CodeQL](https://github.com/kak-tus/irma_bot/workflows/CodeQL/badge.svg)
+[![Build image](https://github.com/kak-tus/irma_bot/actions/workflows/build-image.yml/badge.svg)](https://github.com/kak-tus/irma_bot/actions/workflows/build-image.yml)
+[![CodeQL](https://github.com/kak-tus/irma_bot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/kak-tus/irma_bot/actions/workflows/codeql-analysis.yml)
 
 Irma AntiSpam Bot for Telegram groups
 
