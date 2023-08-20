@@ -1,10 +1,9 @@
 package model
 
 import (
-	"database/sql"
-
 	"github.com/kak-tus/irma_bot/model/queries"
 	"github.com/kak-tus/irma_bot/model/queries_types"
+	"github.com/kak-tus/nan"
 )
 
 const defaultGreeting = `
@@ -29,23 +28,11 @@ var defaultQuestions = queries_types.Questions{
 }
 
 var defaultGroup = queries.GetGroupRow{
-	BanQuestion: sql.NullBool{
-		Bool:  true,
-		Valid: true,
-	},
-	BanUrl: sql.NullBool{
-		Bool:  true,
-		Valid: true,
-	},
-	Greeting: sql.NullString{
-		String: defaultGreeting,
-		Valid:  true,
-	},
-	Questions: queries_types.QuestionsDB{Questions: defaultQuestions},
-	BanTimeout: sql.NullInt32{
-		Int32: 1,
-		Valid: true,
-	},
+	BanQuestion: nan.Bool(true),
+	BanUrl:      nan.Bool(true),
+	Greeting:    nan.String(defaultGreeting),
+	Questions:   queries_types.QuestionsDB{Questions: defaultQuestions},
+	BanTimeout:  nan.Int32(1),
 }
 
 func (hdl *Model) GetDefaultGroup() queries.GetGroupRow {

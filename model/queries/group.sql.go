@@ -7,27 +7,32 @@ package queries
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/kak-tus/irma_bot/model/queries_types"
+	"github.com/kak-tus/nan"
+	"github.com/lib/pq"
 )
 
 const createOrUpdateGroup = `-- name: CreateOrUpdateGroup :exec
 INSERT INTO groups
-  (id, greeting, questions, ban_url, ban_question, ban_timeout)
-  VALUES ($1, $2, $3, $4, $5, $6)
+  (id, greeting, questions, ban_url, ban_question, ban_timeout, ignore_domain)
+  VALUES ($1, $2, $3, $4, $5, $6, $7)
 ON CONFLICT (id) DO UPDATE SET
-  (greeting, questions, ban_url, ban_question, ban_timeout) =
-  ROW(EXCLUDED.greeting, EXCLUDED.questions, EXCLUDED.ban_url, EXCLUDED.ban_question, EXCLUDED.ban_timeout)
+  (greeting, questions, ban_url, ban_question, ban_timeout, ignore_domain) =
+  ROW(
+    EXCLUDED.greeting, EXCLUDED.questions, EXCLUDED.ban_url,
+    EXCLUDED.ban_question, EXCLUDED.ban_timeout, EXCLUDED.ignore_domain
+    )
 `
 
 type CreateOrUpdateGroupParams struct {
-	ID          int64
-	Greeting    sql.NullString
-	Questions   queries_types.QuestionsDB
-	BanUrl      sql.NullBool
-	BanQuestion sql.NullBool
-	BanTimeout  sql.NullInt32
+	ID           int64
+	Greeting     nan.NullString
+	Questions    queries_types.QuestionsDB
+	BanUrl       nan.NullBool
+	BanQuestion  nan.NullBool
+	BanTimeout   nan.NullInt32
+	IgnoreDomain []string
 }
 
 func (q *Queries) CreateOrUpdateGroup(ctx context.Context, arg CreateOrUpdateGroupParams) error {
@@ -38,6 +43,7 @@ func (q *Queries) CreateOrUpdateGroup(ctx context.Context, arg CreateOrUpdateGro
 		arg.BanUrl,
 		arg.BanQuestion,
 		arg.BanTimeout,
+		pq.Array(arg.IgnoreDomain),
 	)
 	return err
 }
@@ -48,17 +54,19 @@ SELECT
   ban_url,
   greeting,
   questions,
-  ban_timeout
+  ban_timeout,
+  ignore_domain
 FROM public.groups
 WHERE id = $1
 `
 
 type GetGroupRow struct {
-	BanQuestion sql.NullBool
-	BanUrl      sql.NullBool
-	Greeting    sql.NullString
-	Questions   queries_types.QuestionsDB
-	BanTimeout  sql.NullInt32
+	BanQuestion  nan.NullBool
+	BanUrl       nan.NullBool
+	Greeting     nan.NullString
+	Questions    queries_types.QuestionsDB
+	BanTimeout   nan.NullInt32
+	IgnoreDomain []string
 }
 
 func (q *Queries) GetGroup(ctx context.Context, id int64) (GetGroupRow, error) {
@@ -70,6 +78,7 @@ func (q *Queries) GetGroup(ctx context.Context, id int64) (GetGroupRow, error) {
 		&i.Greeting,
 		&i.Questions,
 		&i.BanTimeout,
+		pq.Array(&i.IgnoreDomain),
 	)
 	return i, err
 }

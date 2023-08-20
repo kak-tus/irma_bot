@@ -12,7 +12,9 @@ require (
 	github.com/goccy/go-json v0.9.7
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/json-iterator/go v1.1.12
+	github.com/kak-tus/nan v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/lib/pq v1.10.2
 	github.com/zach-klippenstein/goregen v0.0.0-20160303162051-795b5e3961ea
 	go.uber.org/zap v1.20.0
 	golang.org/x/net v0.0.0-20220513224357-95641704303c
@@ -24,9 +26,12 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
+	github.com/gocql/gocql v0.0.0-20211222173705-d73e6b1002a7 // indirect
+	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/gxui v0.0.0-20151028112939-f85e0a97b3a4 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.10.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
@@ -43,5 +48,6 @@ require (
 	go.uber.org/multierr v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20220513210258-46612604a0f9 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

@@ -8,17 +8,18 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/kak-tus/irma_bot/model/queries"
 	"github.com/kak-tus/irma_bot/model/queries_types"
+	"github.com/kak-tus/nan"
 )
 
 func (hdl *API) GetGroup(w http.ResponseWriter, r *http.Request, params GetGroupParams) {
 	data, err := hdl.storage.GetTokenData(r.Context(), string(params.Token))
 	if err != nil {
-		hdl.errorInternal(w, err, "internal error")
+		hdl.errorInternal(w, err, "get group failed")
 		return
 	}
 
 	if data.ChatID == 0 {
-		hdl.errorNotFound(w, err, "not found")
+		hdl.errorNotFound(w, err, "zero chat id")
 		return
 	}
 
@@ -32,11 +33,12 @@ func (hdl *API) GetGroup(w http.ResponseWriter, r *http.Request, params GetGroup
 	defaultGroup := hdl.model.GetDefaultGroup()
 
 	respGroup := GetGroupResponse{
-		BanQuestion: defaultGroup.BanQuestion.Bool,
-		BanTimeout:  defaultGroup.BanTimeout.Int32,
-		BanUrl:      defaultGroup.BanUrl.Bool,
-		Greeting:    defaultGroup.Greeting.String,
-		Id:          data.ChatID,
+		BanQuestion:   defaultGroup.BanQuestion.Bool,
+		BanTimeout:    defaultGroup.BanTimeout.Int32,
+		BanUrl:        defaultGroup.BanUrl.Bool,
+		Greeting:      defaultGroup.Greeting.String,
+		Id:            data.ChatID,
+		IgnoreDomains: &group.IgnoreDomain,
 	}
 
 	if group.BanQuestion.Valid {
@@ -135,26 +137,18 @@ func (hdl *API) SaveGroup(w http.ResponseWriter, r *http.Request, params SaveGro
 	}
 
 	updateParams := queries.CreateOrUpdateGroupParams{
-		ID: data.ChatID,
-		Greeting: sql.NullString{
-			String: group.Greeting,
-			Valid:  true,
-		},
+		ID:       data.ChatID,
+		Greeting: nan.String(group.Greeting),
 		Questions: queries_types.QuestionsDB{
 			Questions: questions,
 		},
-		BanUrl: sql.NullBool{
-			Bool:  group.BanUrl,
-			Valid: true,
-		},
-		BanQuestion: sql.NullBool{
-			Bool:  group.BanQuestion,
-			Valid: true,
-		},
-		BanTimeout: sql.NullInt32{
-			Int32: group.BanTimeout,
-			Valid: true,
-		},
+		BanUrl:      nan.Bool(group.BanUrl),
+		BanQuestion: nan.Bool(group.BanQuestion),
+		BanTimeout:  nan.Int32(group.BanTimeout),
+	}
+
+	if group.IgnoreDomains != nil {
+		updateParams.IgnoreDomain = *group.IgnoreDomains
 	}
 
 	err = hdl.model.Queries.CreateOrUpdateGroup(r.Context(), updateParams)

@@ -104,6 +104,18 @@ components:
           maximum: 60
         questions:
           $ref: '#/components/schemas/Questions'
+        ignore_domains:
+          $ref: '#/components/schemas/Domains'
+
+    Domains:
+      type: array
+      minItems: 1
+      maxItems: 100
+      items:
+        $ref: '#/components/schemas/Domain'
+
+    Domain:
+      type: string
 
     Questions:
       type: array
