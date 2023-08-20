@@ -1,5 +1,7 @@
 Unreleased
   - Fix openapi linter warnings.
+  - Use latest oapi.
+  - Support for ignore domain set.
 
 2022-01-20 v1.4.6
   - Reply to in message.
