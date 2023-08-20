@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/goccy/go-json"
 	"github.com/kak-tus/irma_bot/model/queries"
@@ -33,12 +34,11 @@ func (hdl *API) GetGroup(w http.ResponseWriter, r *http.Request, params GetGroup
 	defaultGroup := hdl.model.GetDefaultGroup()
 
 	respGroup := GetGroupResponse{
-		BanQuestion:   defaultGroup.BanQuestion.Bool,
-		BanTimeout:    defaultGroup.BanTimeout.Int32,
-		BanUrl:        defaultGroup.BanUrl.Bool,
-		Greeting:      defaultGroup.Greeting.String,
-		Id:            data.ChatID,
-		IgnoreDomains: &group.IgnoreDomain,
+		BanQuestion: defaultGroup.BanQuestion.Bool,
+		BanTimeout:  defaultGroup.BanTimeout.Int32,
+		BanUrl:      defaultGroup.BanUrl.Bool,
+		Greeting:    defaultGroup.Greeting.String,
+		Id:          data.ChatID,
 	}
 
 	if group.BanQuestion.Valid {
@@ -84,6 +84,10 @@ func (hdl *API) GetGroup(w http.ResponseWriter, r *http.Request, params GetGroup
 		}
 
 		respGroup.Questions = append(respGroup.Questions, respQuestion)
+	}
+
+	if len(group.IgnoreDomain) != 0 {
+		respGroup.IgnoreDomains = &group.IgnoreDomain
 	}
 
 	_ = json.NewEncoder(w).Encode(respGroup)
@@ -148,7 +152,19 @@ func (hdl *API) SaveGroup(w http.ResponseWriter, r *http.Request, params SaveGro
 	}
 
 	if group.IgnoreDomains != nil {
-		updateParams.IgnoreDomain = *group.IgnoreDomains
+		ignore := make([]string, 0, len(*group.IgnoreDomains))
+
+		for _, domain := range *group.IgnoreDomains {
+			parsed, err := url.Parse("http://" + domain)
+			if err != nil {
+				hdl.errorInternal(w, err, "invalid domain")
+				return
+			}
+
+			ignore = append(ignore, parsed.Hostname())
+		}
+
+		updateParams.IgnoreDomain = ignore
 	}
 
 	err = hdl.model.Queries.CreateOrUpdateGroup(r.Context(), updateParams)
