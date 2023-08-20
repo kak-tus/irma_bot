@@ -116,6 +116,7 @@ components:
 
     Domain:
       type: string
+      maxLength: 256
 
     Questions:
       type: array
