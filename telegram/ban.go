@@ -9,7 +9,7 @@ import (
 
 const nameLimit = 100
 
-func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
+func (hdl *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 	if msg.NewChatMembers == nil {
 		return false, nil
 	}
@@ -18,7 +18,7 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 
 	for _, u := range msg.NewChatMembers {
 		if len(u.FirstName) >= nameLimit || len(u.LastName) >= nameLimit {
-			o.log.Infow("Ban long name",
+			hdl.log.Infow("Ban long name",
 				"User", u.FirstName,
 				"Chat", msg.Chat.ID,
 			)
@@ -42,21 +42,21 @@ func (o *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 			UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
 		}
 
-		_, err := o.bot.Request(kick)
+		_, err := hdl.bot.Request(kick)
 		if err != nil {
 			return true, err
 		}
 	}
 
-	if err := o.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
+	if err := hdl.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
 		return true, err
 	}
 
 	return true, nil
 }
 
-func (o *InstanceObj) banKickPool(ctx context.Context, msg *tgbotapi.Message) (bool, error) {
-	kicked, err := o.stor.IsKicked(ctx, msg.Chat.ID, int(msg.From.ID))
+func (hdl *InstanceObj) banKickPool(ctx context.Context, msg *tgbotapi.Message) (bool, error) {
+	kicked, err := hdl.stor.IsKicked(ctx, msg.Chat.ID, int(msg.From.ID))
 	if err != nil {
 		return false, err
 	}
@@ -65,7 +65,7 @@ func (o *InstanceObj) banKickPool(ctx context.Context, msg *tgbotapi.Message) (b
 		return false, err
 	}
 
-	o.log.Infow("User found in kick pool",
+	hdl.log.Infow("User found in kick pool",
 		"User", msg.From.FirstName,
 		"Chat", msg.Chat.ID,
 	)
@@ -78,12 +78,12 @@ func (o *InstanceObj) banKickPool(ctx context.Context, msg *tgbotapi.Message) (b
 		UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
 	}
 
-	_, err = o.bot.Request(kick)
+	_, err = hdl.bot.Request(kick)
 	if err != nil {
 		return true, err
 	}
 
-	if err := o.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
+	if err := hdl.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
 		return true, err
 	}
 

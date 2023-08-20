@@ -11,7 +11,7 @@ import (
 	"github.com/kak-tus/irma_bot/storage"
 )
 
-func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Message) error {
+func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Message) error {
 	var ban bool
 
 	if msg.Entities != nil {
@@ -45,10 +45,10 @@ func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Messa
 	}
 
 	if !ban {
-		return o.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(msg.From.ID))
+		return hdl.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(msg.From.ID))
 	}
 
-	o.log.Infow("Restricted message",
+	hdl.log.Infow("Restricted message",
 		"User", msg.From.FirstName,
 		"Chat", msg.Chat.ID,
 	)
@@ -61,26 +61,26 @@ func (o *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Messa
 		UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
 	}
 
-	_, err := o.bot.Request(kick)
+	_, err := hdl.bot.Request(kick)
 	if err != nil {
 		return err
 	}
 
-	if err := o.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
+	if err := hdl.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) error {
-	isAdm, err := o.isAdmin(msg.Chat.ID, msg.From.ID)
+func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) error {
+	isAdm, err := hdl.isAdmin(msg.Chat.ID, msg.From.ID)
 	if err != nil {
 		return err
 	}
 
 	if isAdm {
-		o.log.Infow(
+		hdl.log.Infow(
 			"Newbie added by admin, it is normal",
 			"Admin", msg.From.ID,
 		)
@@ -88,20 +88,20 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 		return nil
 	}
 
-	gr, err := o.model.Queries.GetGroup(ctx, msg.Chat.ID)
+	gr, err := hdl.model.Queries.GetGroup(ctx, msg.Chat.ID)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
-	defaultGroup := o.model.GetDefaultGroup()
+	defaultGroup := hdl.model.GetDefaultGroup()
 
 	for _, m := range msg.NewChatMembers {
-		o.log.Infow("Newbie found, add messages",
+		hdl.log.Infow("Newbie found, add messages",
 			"User", m.FirstName,
 			"Chat", msg.Chat.ID,
 		)
 
-		err := o.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(m.ID))
+		err := hdl.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(m.ID))
 		if err != nil {
 			return err
 		}
@@ -124,7 +124,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 	}
 
 	for _, newMember := range msg.NewChatMembers {
-		o.log.Infow("Newbie found, send question",
+		hdl.log.Infow("Newbie found, send question",
 			"User", newMember.FirstName,
 			"Chat", msg.Chat.ID,
 		)
@@ -155,7 +155,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 
 		resp.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(btns...)
 
-		res, err := o.bot.Send(resp)
+		res, err := hdl.bot.Send(resp)
 		if err != nil {
 			return err
 		}
@@ -171,11 +171,11 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 			MessageID: res.MessageID,
 			UserID:    int(newMember.ID),
 		}
-		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
+		if err := hdl.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
 		}
 
-		err = o.stor.SetKicked(ctx, msg.Chat.ID, int(newMember.ID), banTimeout)
+		err = hdl.stor.SetKicked(ctx, msg.Chat.ID, int(newMember.ID), banTimeout)
 		if err != nil {
 			return err
 		}
@@ -186,7 +186,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 			MessageID: msg.MessageID,
 			UserID:    int(newMember.ID),
 		}
-		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
+		if err := hdl.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
 		}
 
@@ -195,7 +195,7 @@ func (o *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) err
 			Type:   storage.ActionTypeKick,
 			UserID: int(newMember.ID),
 		}
-		if err := o.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
+		if err := hdl.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
 		}
 	}

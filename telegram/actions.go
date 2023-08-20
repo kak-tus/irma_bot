@@ -8,17 +8,17 @@ import (
 	"github.com/kak-tus/irma_bot/storage"
 )
 
-func (o *InstanceObj) processActions() error {
+func (hdl *InstanceObj) processActions() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	acts, err := o.stor.GetFromActionPool(ctx)
+	acts, err := hdl.stor.GetFromActionPool(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, a := range acts {
-		kicked, err := o.stor.IsKicked(ctx, a.ChatID, a.UserID)
+		kicked, err := hdl.stor.IsKicked(ctx, a.ChatID, a.UserID)
 		if err != nil {
 			return err
 		}
@@ -28,7 +28,7 @@ func (o *InstanceObj) processActions() error {
 		}
 
 		if a.Type == storage.ActionTypeDelete {
-			if err := o.deleteMessage(a.ChatID, a.MessageID); err != nil {
+			if err := hdl.deleteMessage(a.ChatID, a.MessageID); err != nil {
 				return err
 			}
 		} else if a.Type == storage.ActionTypeKick {
@@ -40,7 +40,7 @@ func (o *InstanceObj) processActions() error {
 				UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
 			}
 
-			_, err := o.bot.Request(kick)
+			_, err := hdl.bot.Request(kick)
 			if err != nil {
 				return err
 			}

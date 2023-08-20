@@ -15,8 +15,8 @@ const (
 	privateOkText       = "I sent message with configuration url in private chat with you."
 )
 
-func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) error {
-	isAdm, err := o.isAdmin(msg.Chat.ID, msg.From.ID)
+func (hdl *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) error {
+	isAdm, err := hdl.isAdmin(msg.Chat.ID, msg.From.ID)
 	if err != nil {
 		return err
 	}
@@ -26,7 +26,7 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 
 		respMsg.ReplyToMessageID = msg.MessageID
 
-		_, err = o.bot.Send(respMsg)
+		_, err = hdl.bot.Send(respMsg)
 		if err != nil {
 			return err
 		}
@@ -34,12 +34,12 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 		return nil
 	}
 
-	token, err := o.stor.NewToken(ctx, msg.Chat.ID)
+	token, err := hdl.stor.NewToken(ctx, msg.Chat.ID)
 	if err != nil {
 		return err
 	}
 
-	u, err := url.Parse(o.cnf.URL)
+	u, err := url.Parse(hdl.cnf.URL)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 
 	text := privateDisabledText
 
-	_, err = o.bot.Request(respMsg)
+	_, err = hdl.bot.Request(respMsg)
 	if err == nil {
 		text = privateOkText
 	}
@@ -64,7 +64,7 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 
 	respMsg.ReplyToMessageID = msg.MessageID
 
-	_, err = o.bot.Send(respMsg)
+	_, err = hdl.bot.Send(respMsg)
 	if err != nil {
 		return err
 	}
@@ -72,10 +72,10 @@ func (o *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message) e
 	return nil
 }
 
-func (o *InstanceObj) isAdmin(chatID int64, userID int64) (bool, error) {
+func (hdl *InstanceObj) isAdmin(chatID int64, userID int64) (bool, error) {
 	req := tgbotapi.ChatAdministratorsConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: chatID}}
 
-	adms, err := o.bot.GetChatAdministrators(req)
+	adms, err := hdl.bot.GetChatAdministrators(req)
 	if err != nil {
 		return false, err
 	}

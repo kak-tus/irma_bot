@@ -35,23 +35,23 @@ https://github.com/kak-tus/irma_bot
 
 const botNameTemplate = "__IRMA_BOT_NAME__"
 
-func (o *InstanceObj) process(ctx context.Context, msg tgbotapi.Update) error {
+func (hdl *InstanceObj) process(ctx context.Context, msg tgbotapi.Update) error {
 	if msg.Message != nil {
-		return o.processMsg(ctx, msg.Message)
+		return hdl.processMsg(ctx, msg.Message)
 	} else if msg.CallbackQuery != nil {
-		return o.processCallback(ctx, msg.CallbackQuery)
+		return hdl.processCallback(ctx, msg.CallbackQuery)
 	}
 
 	return nil
 }
 
-func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) error {
-	textWithBotName := strings.ReplaceAll(usageText, botNameTemplate, o.cnf.BotName)
+func (hdl *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) error {
+	textWithBotName := strings.ReplaceAll(usageText, botNameTemplate, hdl.cnf.BotName)
 
 	if msg.Chat.IsPrivate() {
 		resp := tgbotapi.NewMessage(msg.Chat.ID, textWithBotName)
 
-		_, err := o.bot.Send(resp)
+		_, err := hdl.bot.Send(resp)
 		if err != nil {
 			return err
 		}
@@ -61,7 +61,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 
 	// Ban users with extra long names
 	// It's probably "name spammers"
-	banned, err := o.banLongNames(msg)
+	banned, err := hdl.banLongNames(msg)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 		return nil
 	}
 
-	banned, err = o.banKickPool(ctx, msg)
+	banned, err = hdl.banKickPool(ctx, msg)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 		MessageID: msg.MessageID,
 		UserID:    int(msg.From.ID),
 	}
-	if err := o.stor.AddToActionPool(ctx, act, time.Second); err != nil {
+	if err := hdl.stor.AddToActionPool(ctx, act, time.Second); err != nil {
 		return err
 	}
 
@@ -102,34 +102,34 @@ func (o *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) err
 		UserID: int(msg.From.ID),
 	}
 
-	if err := o.stor.AddToActionPool(ctx, act, time.Second); err != nil {
+	if err := hdl.stor.AddToActionPool(ctx, act, time.Second); err != nil {
 		return err
 	}
 
-	cnt, err := o.stor.GetNewbieMessages(ctx, msg.Chat.ID, int(msg.From.ID))
+	cnt, err := hdl.stor.GetNewbieMessages(ctx, msg.Chat.ID, int(msg.From.ID))
 	if err != nil {
 		return err
 	}
 
 	// In case of newbie we got count >0, for ordinary user count=0
 	if cnt > 0 && cnt <= 4 {
-		return o.messageFromNewbie(ctx, msg)
+		return hdl.messageFromNewbie(ctx, msg)
 	}
 
 	if msg.NewChatMembers != nil {
-		return o.newMembers(ctx, msg)
+		return hdl.newMembers(ctx, msg)
 	}
 
-	name := fmt.Sprintf("@%s", o.cnf.BotName)
+	name := fmt.Sprintf("@%s", hdl.cnf.BotName)
 
 	if strings.HasPrefix(msg.Text, name) {
-		return o.messageToBot(ctx, msg)
+		return hdl.messageToBot(ctx, msg)
 	}
 
 	return nil
 }
 
-func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.CallbackQuery) error {
+func (hdl *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.CallbackQuery) error {
 	// UserID_ChatID_QuestionID_AnswerNum
 	tkns := strings.Split(msg.Data, "_")
 	if len(tkns) != 4 {
@@ -150,12 +150,12 @@ func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callbac
 		return nil
 	}
 
-	gr, err := o.model.Queries.GetGroup(ctx, chatID)
+	gr, err := hdl.model.Queries.GetGroup(ctx, chatID)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
-	defaultGroup := o.model.GetDefaultGroup()
+	defaultGroup := hdl.model.GetDefaultGroup()
 
 	questionID, err := strconv.Atoi(tkns[2])
 	if err != nil {
@@ -180,12 +180,12 @@ func (o *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callbac
 		return errors.New("Answer num from callback greater, then answers count")
 	}
 
-	if err := o.deleteMessage(chatID, msg.Message.MessageID); err != nil {
+	if err := hdl.deleteMessage(chatID, msg.Message.MessageID); err != nil {
 		return err
 	}
 
 	if quest[questionID].Answers[answerNum].Correct == 1 {
-		err := o.stor.DelKicked(ctx, chatID, userID)
+		err := hdl.stor.DelKicked(ctx, chatID, userID)
 		if err != nil {
 			return err
 		}

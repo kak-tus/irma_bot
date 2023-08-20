@@ -61,53 +61,53 @@ func NewTelegram(opts Options) (*InstanceObj, error) {
 	return inst, nil
 }
 
-func (o *InstanceObj) Start() error {
-	o.log.Info("start telegram")
+func (hdl *InstanceObj) Start() error {
+	hdl.log.Info("start telegram")
 
-	webhookCnf, err := tgbotapi.NewWebhook(o.cnf.URL + o.cnf.Path)
+	webhookCnf, err := tgbotapi.NewWebhook(hdl.cnf.URL + hdl.cnf.Path)
 	if err != nil {
 		return err
 	}
 
-	resp, err := o.bot.Request(webhookCnf)
+	resp, err := hdl.bot.Request(webhookCnf)
 	if err != nil {
 		return err
 	}
 
-	o.log.Info(resp.Description)
+	hdl.log.Info(resp.Description)
 
-	upd := o.bot.ListenForWebhook("/" + o.cnf.Path)
+	upd := hdl.bot.ListenForWebhook("/" + hdl.cnf.Path)
 
 	// HACK TODO
 	// We must register our handler again in internal router
 	// May be better switch telegram to other port from api?
 	// o.router.Mount("/"+o.cnf.Path, http.DefaultServeMux)
-	o.router.Route("/", func(r chi.Router) {
-		r.Handle("/"+o.cnf.Path, http.DefaultServeMux)
+	hdl.router.Route("/", func(r chi.Router) {
+		r.Handle("/"+hdl.cnf.Path, http.DefaultServeMux)
 	})
 
-	o.lock.Add(1)
-	defer o.lock.Done()
+	hdl.lock.Add(1)
+	defer hdl.lock.Done()
 
 	tick := time.NewTicker(time.Second * 10)
 
 	for {
 		select {
 		case <-tick.C:
-			err := o.processActions()
+			err := hdl.processActions()
 			if err != nil {
-				o.log.Error(err)
+				hdl.log.Error(err)
 				continue
 			}
-		case <-o.stop:
+		case <-hdl.stop:
 			tick.Stop()
 			return nil
 		case msg := <-upd:
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
-			err := o.process(ctx, msg)
+			err := hdl.process(ctx, msg)
 			if err != nil {
-				o.log.Error(err)
+				hdl.log.Error(err)
 			}
 
 			cancel()
@@ -115,27 +115,27 @@ func (o *InstanceObj) Start() error {
 	}
 }
 
-func (o *InstanceObj) Stop() error {
-	o.log.Info("stop telegram")
+func (hdl *InstanceObj) Stop() error {
+	hdl.log.Info("stop telegram")
 
-	o.stop <- true
-	o.lock.Wait()
+	hdl.stop <- true
+	hdl.lock.Wait()
 
-	o.log.Info("stopped telegram")
+	hdl.log.Info("stopped telegram")
 
 	return nil
 }
 
-func (o *InstanceObj) deleteMessage(chatID int64, messageID int) error {
+func (hdl *InstanceObj) deleteMessage(chatID int64, messageID int) error {
 	del := tgbotapi.NewDeleteMessage(chatID, messageID)
 
-	if _, err := o.bot.Request(del); err != nil {
+	if _, err := hdl.bot.Request(del); err != nil {
 		ex, ok := err.(tgbotapi.Error)
 		if !(ok && ex.Message == "Bad Request: message to delete not found") {
 			return err
 		}
 
-		o.log.Warnw("Message in chat is already deleted",
+		hdl.log.Warnw("Message in chat is already deleted",
 			"Chat", chatID,
 			"Message", messageID,
 		)
