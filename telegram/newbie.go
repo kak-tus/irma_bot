@@ -5,43 +5,18 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"net/url"
 	"time"
+	"unicode/utf16"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/kak-tus/irma_bot/storage"
 )
 
 func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Message) error {
-	var ban bool
-
-	if msg.Entities != nil {
-		for _, e := range msg.Entities {
-			if e.Type == "url" || e.Type == "text_link" || e.Type == "mention" || e.Type == "email" {
-				ban = true
-				break
-			}
-		}
-	}
-
-	if msg.CaptionEntities != nil {
-		for _, e := range msg.CaptionEntities {
-			if e.Type == "url" || e.Type == "text_link" || e.Type == "mention" || e.Type == "email" {
-				ban = true
-				break
-			}
-		}
-	}
-
-	if msg.ForwardFrom != nil ||
-		msg.ForwardFromChat != nil ||
-		msg.Sticker != nil ||
-		msg.Photo != nil ||
-		msg.Animation != nil ||
-		msg.Audio != nil ||
-		msg.Video != nil ||
-		msg.VideoNote != nil ||
-		msg.Voice != nil {
-		ban = true
+	ban, err := hdl.isBanNewbie(ctx, msg)
+	if err != nil {
+		return err
 	}
 
 	if !ban {
@@ -61,7 +36,7 @@ func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Mes
 		UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
 	}
 
-	_, err := hdl.bot.Request(kick)
+	_, err = hdl.bot.Request(kick)
 	if err != nil {
 		return err
 	}
@@ -201,4 +176,96 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) e
 	}
 
 	return nil
+}
+
+func (hdl *InstanceObj) isBanNewbie(
+	ctx context.Context,
+	msg *tgbotapi.Message,
+) (bool, error) {
+	group, err := hdl.model.Queries.GetGroup(ctx, msg.Chat.ID)
+	if err != nil && err != sql.ErrNoRows {
+		return false, err
+	}
+
+	ignore := make(map[string]struct{})
+
+	for _, domain := range group.IgnoreDomain {
+		ignore[domain] = struct{}{}
+	}
+
+	ban := hdl.isBanNewbieForEntities(ignore, msg.Text, msg.Entities)
+	if ban {
+		return true, nil
+	}
+
+	ban = hdl.isBanNewbieForEntities(ignore, msg.Text, msg.CaptionEntities)
+	if ban {
+		return true, nil
+	}
+
+	if msg.ForwardFrom != nil ||
+		msg.ForwardFromChat != nil ||
+		msg.Sticker != nil ||
+		len(msg.Photo) != 0 ||
+		msg.Animation != nil ||
+		msg.Audio != nil ||
+		msg.Video != nil ||
+		msg.VideoNote != nil ||
+		msg.Voice != nil {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (hdl *InstanceObj) isBanNewbieForEntities(
+	ignore map[string]struct{},
+	text string, entities []tgbotapi.MessageEntity,
+) bool {
+	checkUrls := make([]string, 0)
+
+	for _, entity := range entities {
+		switch entity.Type {
+		case "url":
+			encoded16 := utf16.Encode([]rune(text))
+			entityVal := encoded16[entity.Offset : entity.Offset+entity.Length]
+			urlStr := string(utf16.Decode(entityVal))
+			checkUrls = append(checkUrls, urlStr)
+		case "text_link":
+			checkUrls = append(checkUrls, entity.URL)
+		case "mention", "email":
+			return true
+		}
+	}
+
+	if len(checkUrls) == 0 {
+		return false
+	}
+
+	if len(ignore) == 0 {
+		return true
+	}
+
+	for _, urlStr := range checkUrls {
+		parsed, err := url.Parse(urlStr)
+		if err != nil {
+			hdl.log.Errorw("can't parse url in message", "url", urlStr)
+
+			// Ban also in case of incorrect url because it is some url
+			return true
+		}
+
+		if parsed.Hostname() == "" {
+			hdl.log.Errorw("can't parse url in message, but no error", "url", urlStr)
+
+			// Can't parse? Ban!
+			return true
+		}
+
+		if _, ok := ignore[parsed.Hostname()]; !ok {
+			return true
+		}
+	}
+
+	return false
 }
