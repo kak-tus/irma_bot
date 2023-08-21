@@ -3,6 +3,7 @@ package telegram
 import (
 	"testing"
 
+	"github.com/forPelevin/gomoji"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -68,7 +69,9 @@ func TestIsBanNewbieForEntities(t *testing.T) {
 				entities = []tgbotapi.MessageEntity{entity}
 			}
 
-			ban := hdl.isBanNewbieForEntities(testCase.ignore, testCase.text, entities)
+			urlsList := hdl.getURLsFromEntities(testCase.text, entities...)
+
+			ban := hdl.isBanNewbieForURLs(testCase.ignore, urlsList)
 			if testCase.ban {
 				require.True(t, ban, testCase.name)
 			} else {
@@ -76,4 +79,8 @@ func TestIsBanNewbieForEntities(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEmojii(t *testing.T) {
+	require.Equal(t, 3, len(gomoji.CollectAll("🤦‍♂️ 1 🤦‍♂️ 2 🤦‍♂️ 3")))
 }

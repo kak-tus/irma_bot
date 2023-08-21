@@ -9,9 +9,12 @@ import (
 	"time"
 	"unicode/utf16"
 
+	"github.com/forPelevin/gomoji"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/kak-tus/irma_bot/storage"
 )
+
+const maxEmojiis = 2
 
 func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Message) error {
 	ban, err := hdl.isBanNewbie(ctx, msg)
@@ -182,24 +185,7 @@ func (hdl *InstanceObj) isBanNewbie(
 	ctx context.Context,
 	msg *tgbotapi.Message,
 ) (bool, error) {
-	group, err := hdl.model.Queries.GetGroup(ctx, msg.Chat.ID)
-	if err != nil && err != sql.ErrNoRows {
-		return false, err
-	}
-
-	ignore := make(map[string]struct{})
-
-	for _, domain := range group.IgnoreDomain {
-		ignore[domain] = struct{}{}
-	}
-
-	ban := hdl.isBanNewbieForEntities(ignore, msg.Text, msg.Entities)
-	if ban {
-		return true, nil
-	}
-
-	ban = hdl.isBanNewbieForEntities(ignore, msg.Text, msg.CaptionEntities)
-	if ban {
+	if hdl.isBanNewbieForEntities(append(msg.Entities, msg.CaptionEntities...)...) {
 		return true, nil
 	}
 
@@ -215,13 +201,47 @@ func (hdl *InstanceObj) isBanNewbie(
 		return true, nil
 	}
 
+	if len(gomoji.CollectAll(msg.Text)) > maxEmojiis {
+		return true, nil
+	}
+
+	urlsList := hdl.getURLsFromEntities(msg.Text, append(msg.Entities, msg.CaptionEntities...)...)
+
+	if len(urlsList) != 0 {
+		group, err := hdl.model.Queries.GetGroup(ctx, msg.Chat.ID)
+		if err != nil && err != sql.ErrNoRows {
+			return false, err
+		}
+
+		ignore := make(map[string]struct{})
+
+		for _, domain := range group.IgnoreDomain {
+			ignore[domain] = struct{}{}
+		}
+
+		hdl.isBanNewbieForURLs(ignore, urlsList)
+	}
+
 	return false, nil
 }
 
 func (hdl *InstanceObj) isBanNewbieForEntities(
-	ignore map[string]struct{},
-	text string, entities []tgbotapi.MessageEntity,
+	entities ...tgbotapi.MessageEntity,
 ) bool {
+	for _, entity := range entities {
+		switch entity.Type {
+		case "mention", "email":
+			return true
+		}
+	}
+
+	return false
+}
+
+func (hdl *InstanceObj) getURLsFromEntities(
+	text string,
+	entities ...tgbotapi.MessageEntity,
+) []string {
 	checkUrls := make([]string, 0)
 
 	for _, entity := range entities {
@@ -233,11 +253,16 @@ func (hdl *InstanceObj) isBanNewbieForEntities(
 			checkUrls = append(checkUrls, urlStr)
 		case "text_link":
 			checkUrls = append(checkUrls, entity.URL)
-		case "mention", "email":
-			return true
 		}
 	}
 
+	return checkUrls
+}
+
+func (hdl *InstanceObj) isBanNewbieForURLs(
+	ignore map[string]struct{},
+	checkUrls []string,
+) bool {
 	if len(checkUrls) == 0 {
 		return false
 	}

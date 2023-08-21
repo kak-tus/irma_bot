@@ -1,8 +1,9 @@
 Unreleased
   - Fix openapi linter warnings.
   - Use latest oapi.
-  - Support for ignore domain set.
+  - Support for ignore domains in message from newbie.
   - Go 1.21.0.
+  - Ban for multiple emojii in message from newbie.
 
 2022-01-20 v1.4.6
   - Reply to in message.
