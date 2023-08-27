@@ -219,7 +219,7 @@ func (hdl *InstanceObj) isBanNewbie(
 			ignore[domain] = struct{}{}
 		}
 
-		hdl.isBanNewbieForURLs(ignore, urlsList)
+		return hdl.isBanNewbieForURLs(ignore, urlsList), nil
 	}
 
 	return false, nil
