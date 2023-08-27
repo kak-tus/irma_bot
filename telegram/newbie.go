@@ -72,10 +72,8 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) e
 	defaultGroup := hdl.model.GetDefaultGroup()
 
 	for _, m := range msg.NewChatMembers {
-		hdl.oldLog.Infow("Newbie found, add messages",
-			"User", m.FirstName,
-			"Chat", msg.Chat.ID,
-		)
+		hdl.log.Info().Str("user", m.FirstName).Int64("chat", msg.Chat.ID).
+			Msg("newbie found, add messages")
 
 		err := hdl.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(m.ID))
 		if err != nil {
@@ -100,10 +98,8 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) e
 	}
 
 	for _, newMember := range msg.NewChatMembers {
-		hdl.oldLog.Infow("Newbie found, send question",
-			"User", newMember.FirstName,
-			"Chat", msg.Chat.ID,
-		)
+		hdl.log.Info().Str("user", newMember.FirstName).Int64("chat", msg.Chat.ID).
+			Msg("newbie found, send question")
 
 		qID := rand.Intn(len(quest))
 
