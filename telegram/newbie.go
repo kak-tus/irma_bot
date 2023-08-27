@@ -26,10 +26,8 @@ func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Mes
 		return hdl.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(msg.From.ID))
 	}
 
-	hdl.log.Infow("Restricted message",
-		"User", msg.From.FirstName,
-		"Chat", msg.Chat.ID,
-	)
+	hdl.log.Info().Str("user", msg.From.FirstName).Int64("chat", msg.Chat.ID).
+		Str("msg", msg.Text).Msg("restricted message")
 
 	kick := tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: tgbotapi.ChatMemberConfig{
@@ -58,7 +56,7 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) e
 	}
 
 	if isAdm {
-		hdl.log.Infow(
+		hdl.oldLog.Infow(
 			"Newbie added by admin, it is normal",
 			"Admin", msg.From.ID,
 		)
@@ -74,7 +72,7 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) e
 	defaultGroup := hdl.model.GetDefaultGroup()
 
 	for _, m := range msg.NewChatMembers {
-		hdl.log.Infow("Newbie found, add messages",
+		hdl.oldLog.Infow("Newbie found, add messages",
 			"User", m.FirstName,
 			"Chat", msg.Chat.ID,
 		)
@@ -102,7 +100,7 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) e
 	}
 
 	for _, newMember := range msg.NewChatMembers {
-		hdl.log.Infow("Newbie found, send question",
+		hdl.oldLog.Infow("Newbie found, send question",
 			"User", newMember.FirstName,
 			"Chat", msg.Chat.ID,
 		)
@@ -186,6 +184,7 @@ func (hdl *InstanceObj) isBanNewbie(
 	msg *tgbotapi.Message,
 ) (bool, error) {
 	if hdl.isBanNewbieForEntities(append(msg.Entities, msg.CaptionEntities...)...) {
+		hdl.log.Info().Str("user", msg.From.FirstName).Int64("chat", msg.Chat.ID).Msg("ban for entries")
 		return true, nil
 	}
 
@@ -198,10 +197,12 @@ func (hdl *InstanceObj) isBanNewbie(
 		msg.Video != nil ||
 		msg.VideoNote != nil ||
 		msg.Voice != nil {
+		hdl.log.Info().Str("user", msg.From.FirstName).Int64("chat", msg.Chat.ID).Msg("ban for media")
 		return true, nil
 	}
 
 	if len(gomoji.CollectAll(msg.Text)) > maxEmojiis {
+		hdl.log.Info().Str("user", msg.From.FirstName).Int64("chat", msg.Chat.ID).Msg("ban for emojii")
 		return true, nil
 	}
 
@@ -219,7 +220,10 @@ func (hdl *InstanceObj) isBanNewbie(
 			ignore[domain] = struct{}{}
 		}
 
-		return hdl.isBanNewbieForURLs(ignore, urlsList), nil
+		if hdl.isBanNewbieForURLs(ignore, urlsList) {
+			hdl.log.Info().Str("user", msg.From.FirstName).Int64("chat", msg.Chat.ID).Msg("ban for url")
+			return true, nil
+		}
 	}
 
 	return false, nil
@@ -274,14 +278,14 @@ func (hdl *InstanceObj) isBanNewbieForURLs(
 	for _, urlStr := range checkUrls {
 		parsed, err := url.Parse(urlStr)
 		if err != nil {
-			hdl.log.Errorw("can't parse url in message", "url", urlStr)
+			hdl.oldLog.Errorw("can't parse url in message", "url", urlStr)
 
 			// Ban also in case of incorrect url because it is some url
 			return true
 		}
 
 		if parsed.Hostname() == "" {
-			hdl.log.Errorw("can't parse url in message, but no error", "url", urlStr)
+			hdl.oldLog.Errorw("can't parse url in message, but no error", "url", urlStr)
 
 			// Can't parse? Ban!
 			return true

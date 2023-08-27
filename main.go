@@ -12,6 +12,7 @@ import (
 	"github.com/kak-tus/irma_bot/model"
 	"github.com/kak-tus/irma_bot/storage"
 	"github.com/kak-tus/irma_bot/telegram"
+	"github.com/rs/zerolog"
 	"go.uber.org/zap"
 )
 
@@ -19,65 +20,68 @@ import (
 //go:generate oapi-codegen --config openapi-codegen.yml openapi.yml
 
 func main() {
-	logger, err := zap.NewProduction()
+	log := zerolog.New(os.Stdout).With().Timestamp().Logger()
+
+	oldLogger, err := zap.NewProduction()
 	if err != nil {
 		panic(err)
 	}
 
-	log := logger.Sugar()
+	oldLog := oldLogger.Sugar()
 
 	cnf, err := config.NewConf()
 	if err != nil {
-		log.Panic(err)
+		log.Panic().Err(err).Msg("fail load config")
 	}
 
 	modelOpts := model.Options{
-		Log: log,
+		Log: oldLog,
 		URL: cnf.DB.Addr,
 	}
 
 	modelHdl, err := model.NewModel(modelOpts)
 	if err != nil {
-		log.Panic(err)
+		oldLog.Panic(err)
 	}
 
 	storOptions := storage.Options{
-		Log:    log,
+		Log:    oldLog,
 		Config: cnf.Storage,
 	}
 
 	stor, err := storage.NewStorage(storOptions)
 	if err != nil {
-		log.Panic(err)
+		oldLog.Panic(err)
 	}
 
 	apiOpts := api.Options{
-		Log:     log,
+		Log:     oldLog,
 		Model:   modelHdl,
 		Storage: stor,
 	}
 
 	apiHdl, err := api.NewAPI(apiOpts)
 	if err != nil {
-		log.Panic(err)
+		oldLog.Panic(err)
 	}
 
 	telegramOpts := telegram.Options{
-		Log:     log,
+		OldLog:  oldLog,
 		Config:  cnf.Telegram,
 		Model:   modelHdl,
 		Router:  apiHdl.GetHTTPRouter(),
 		Storage: stor,
+		Log:     log.With().Str("module", "telegram").Logger(),
 	}
 
 	tg, err := telegram.NewTelegram(telegramOpts)
 	if err != nil {
-		log.Panic(err)
+		oldLog.Panic(err)
 	}
 
 	go func() {
 		if err := tg.Start(); err != nil {
-			log.Panic(err)
+			oldLog.Panic(err)
 		}
 	}()
 
@@ -89,7 +93,7 @@ func main() {
 	go func() {
 		err = srv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			log.Panic(err)
+			oldLog.Panic(err)
 		}
 	}()
 
@@ -97,20 +101,20 @@ func main() {
 	signal.Notify(st, os.Interrupt)
 
 	<-st
-	log.Info("stop")
+	oldLog.Info("stop")
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
 	err = srv.Shutdown(ctx)
 	if err != nil {
-		log.Panic(err)
+		oldLog.Panic(err)
 	}
 
 	cancel()
 
 	if err := tg.Stop(); err != nil {
-		log.Panic(err)
+		oldLog.Panic(err)
 	}
 
-	_ = log.Sync()
+	_ = oldLog.Sync()
 }

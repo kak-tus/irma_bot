@@ -1,4 +1,8 @@
-Unreleased
+2023-08-21 v1.5.1
+  - More logs.
+  - Use zerolog (I prefer it now) for some new log.
+
+2023-08-21 v1.5.0
   - Fix openapi linter warnings.
   - Use latest oapi.
   - Support for ignore domains in message from newbie.

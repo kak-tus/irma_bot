@@ -13,6 +13,7 @@ import (
 	"github.com/kak-tus/irma_bot/config"
 	"github.com/kak-tus/irma_bot/model"
 	"github.com/kak-tus/irma_bot/storage"
+	"github.com/rs/zerolog"
 	"go.uber.org/zap"
 	"golang.org/x/net/proxy"
 )
@@ -21,8 +22,9 @@ type InstanceObj struct {
 	bot    *tgbotapi.BotAPI
 	cnf    config.Tg
 	lock   *sync.WaitGroup
-	log    *zap.SugaredLogger
+	log    zerolog.Logger
 	model  *model.Model
+	oldLog *zap.SugaredLogger
 	router *chi.Mux
 	stop   chan bool
 	stor   *storage.InstanceObj
@@ -30,8 +32,9 @@ type InstanceObj struct {
 
 type Options struct {
 	Config  config.Tg
-	Log     *zap.SugaredLogger
+	Log     zerolog.Logger
 	Model   *model.Model
+	OldLog  *zap.SugaredLogger
 	Router  *chi.Mux
 	Storage *storage.InstanceObj
 }
@@ -53,6 +56,7 @@ func NewTelegram(opts Options) (*InstanceObj, error) {
 		lock:   &sync.WaitGroup{},
 		log:    opts.Log,
 		model:  opts.Model,
+		oldLog: opts.OldLog,
 		router: opts.Router,
 		stop:   make(chan bool, 1),
 		stor:   opts.Storage,
@@ -62,7 +66,7 @@ func NewTelegram(opts Options) (*InstanceObj, error) {
 }
 
 func (hdl *InstanceObj) Start() error {
-	hdl.log.Info("start telegram")
+	hdl.oldLog.Info("start telegram")
 
 	webhookCnf, err := tgbotapi.NewWebhook(hdl.cnf.URL + hdl.cnf.Path)
 	if err != nil {
@@ -74,7 +78,7 @@ func (hdl *InstanceObj) Start() error {
 		return err
 	}
 
-	hdl.log.Info(resp.Description)
+	hdl.oldLog.Info(resp.Description)
 
 	upd := hdl.bot.ListenForWebhook("/" + hdl.cnf.Path)
 
@@ -96,7 +100,7 @@ func (hdl *InstanceObj) Start() error {
 		case <-tick.C:
 			err := hdl.processActions()
 			if err != nil {
-				hdl.log.Error(err)
+				hdl.oldLog.Error(err)
 				continue
 			}
 		case <-hdl.stop:
@@ -107,7 +111,7 @@ func (hdl *InstanceObj) Start() error {
 
 			err := hdl.process(ctx, msg)
 			if err != nil {
-				hdl.log.Error(err)
+				hdl.oldLog.Error(err)
 			}
 
 			cancel()
@@ -116,12 +120,12 @@ func (hdl *InstanceObj) Start() error {
 }
 
 func (hdl *InstanceObj) Stop() error {
-	hdl.log.Info("stop telegram")
+	hdl.oldLog.Info("stop telegram")
 
 	hdl.stop <- true
 	hdl.lock.Wait()
 
-	hdl.log.Info("stopped telegram")
+	hdl.oldLog.Info("stopped telegram")
 
 	return nil
 }
@@ -135,7 +139,7 @@ func (hdl *InstanceObj) deleteMessage(chatID int64, messageID int) error {
 			return err
 		}
 
-		hdl.log.Warnw("Message in chat is already deleted",
+		hdl.oldLog.Warnw("Message in chat is already deleted",
 			"Chat", chatID,
 			"Message", messageID,
 		)

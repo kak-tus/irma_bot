@@ -18,7 +18,7 @@ func (hdl *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 
 	for _, u := range msg.NewChatMembers {
 		if len(u.FirstName) >= nameLimit || len(u.LastName) >= nameLimit {
-			hdl.log.Infow("Ban long name",
+			hdl.oldLog.Infow("Ban long name",
 				"User", u.FirstName,
 				"Chat", msg.Chat.ID,
 			)
@@ -65,7 +65,7 @@ func (hdl *InstanceObj) banKickPool(ctx context.Context, msg *tgbotapi.Message) 
 		return false, err
 	}
 
-	hdl.log.Infow("User found in kick pool",
+	hdl.oldLog.Infow("User found in kick pool",
 		"User", msg.From.FirstName,
 		"Chat", msg.Chat.ID,
 	)
