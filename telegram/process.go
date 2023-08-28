@@ -112,7 +112,7 @@ func (hdl *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) e
 	}
 
 	log := hdl.log.With().Int64("chat_id", msg.Chat.ID).
-		Str("chat", msg.Chat.UserName).Logger()
+		Str("chat_name", msg.Chat.UserName).Str("chat_title", msg.Chat.Title).Logger()
 
 	// In case of newbie we got count >0, for ordinary user count=0
 	if cnt > 0 && cnt <= 4 {
