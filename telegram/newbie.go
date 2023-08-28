@@ -12,12 +12,16 @@ import (
 	"github.com/forPelevin/gomoji"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/kak-tus/irma_bot/storage"
+	"github.com/rs/zerolog"
 )
 
 const maxEmojiis = 2
 
 func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Message) error {
-	ban, err := hdl.isBanNewbie(ctx, msg)
+	log := hdl.log.With().Int64("chat_id", msg.Chat.ID).
+		Str("chat", msg.Chat.UserName).Logger()
+
+	ban, err := hdl.isBanNewbie(ctx, log, msg)
 	if err != nil {
 		return err
 	}
@@ -26,8 +30,7 @@ func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Mes
 		return hdl.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(msg.From.ID))
 	}
 
-	hdl.log.Info().Str("user", msg.From.FirstName).Int64("chat", msg.Chat.ID).
-		Str("msg", msg.Text).Msg("restricted message")
+	log.Info().Str("msg", msg.Text).Msg("restricted message")
 
 	kick := tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: tgbotapi.ChatMemberConfig{
@@ -177,10 +180,14 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) e
 
 func (hdl *InstanceObj) isBanNewbie(
 	ctx context.Context,
+	log zerolog.Logger,
 	msg *tgbotapi.Message,
 ) (bool, error) {
+	log = log.With().Str("user", msg.From.FirstName+" "+msg.From.LastName).
+		Str("user_name", msg.From.UserName).Logger()
+
 	if hdl.isBanNewbieForEntities(append(msg.Entities, msg.CaptionEntities...)...) {
-		hdl.log.Info().Str("user", msg.From.FirstName).Int64("chat", msg.Chat.ID).Msg("ban for entries")
+		log.Info().Msg("ban for entries")
 		return true, nil
 	}
 
@@ -193,12 +200,12 @@ func (hdl *InstanceObj) isBanNewbie(
 		msg.Video != nil ||
 		msg.VideoNote != nil ||
 		msg.Voice != nil {
-		hdl.log.Info().Str("user", msg.From.FirstName).Int64("chat", msg.Chat.ID).Msg("ban for media")
+		log.Info().Msg("ban for media")
 		return true, nil
 	}
 
 	if len(gomoji.CollectAll(msg.Text)) > maxEmojiis {
-		hdl.log.Info().Str("user", msg.From.FirstName).Int64("chat", msg.Chat.ID).Msg("ban for emojii")
+		log.Info().Msg("ban for emojii")
 		return true, nil
 	}
 
@@ -217,7 +224,7 @@ func (hdl *InstanceObj) isBanNewbie(
 		}
 
 		if hdl.isBanNewbieForURLs(ignore, urlsList) {
-			hdl.log.Info().Str("user", msg.From.FirstName).Int64("chat", msg.Chat.ID).Msg("ban for url")
+			log.Info().Msg("ban for url")
 			return true, nil
 		}
 	}
