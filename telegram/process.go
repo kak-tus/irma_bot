@@ -111,13 +111,16 @@ func (hdl *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) e
 		return err
 	}
 
+	log := hdl.log.With().Int64("chat_id", msg.Chat.ID).
+		Str("chat", msg.Chat.UserName).Logger()
+
 	// In case of newbie we got count >0, for ordinary user count=0
 	if cnt > 0 && cnt <= 4 {
-		return hdl.messageFromNewbie(ctx, msg)
+		return hdl.messageFromNewbie(ctx, log, msg)
 	}
 
 	if msg.NewChatMembers != nil {
-		return hdl.newMembers(ctx, msg)
+		return hdl.newMembers(ctx, log, msg)
 	}
 
 	name := fmt.Sprintf("@%s", hdl.cnf.BotName)

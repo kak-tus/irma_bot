@@ -17,10 +17,7 @@ import (
 
 const maxEmojiis = 2
 
-func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Message) error {
-	log := hdl.log.With().Int64("chat_id", msg.Chat.ID).
-		Str("chat", msg.Chat.UserName).Logger()
-
+func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, log zerolog.Logger, msg *tgbotapi.Message) error {
 	ban, err := hdl.isBanNewbie(ctx, log, msg)
 	if err != nil {
 		return err
@@ -52,7 +49,7 @@ func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, msg *tgbotapi.Mes
 	return nil
 }
 
-func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) error {
+func (hdl *InstanceObj) newMembers(ctx context.Context, log zerolog.Logger, msg *tgbotapi.Message) error {
 	isAdm, err := hdl.isAdmin(msg.Chat.ID, msg.From.ID)
 	if err != nil {
 		return err
@@ -75,8 +72,7 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) e
 	defaultGroup := hdl.model.GetDefaultGroup()
 
 	for _, m := range msg.NewChatMembers {
-		hdl.log.Info().Str("user", m.FirstName).Int64("chat", msg.Chat.ID).
-			Msg("newbie found, add messages")
+		log.Info().Str("user", m.FirstName).Msg("newbie found, add messages")
 
 		err := hdl.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(m.ID))
 		if err != nil {
@@ -101,8 +97,7 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, msg *tgbotapi.Message) e
 	}
 
 	for _, newMember := range msg.NewChatMembers {
-		hdl.log.Info().Str("user", newMember.FirstName).Int64("chat", msg.Chat.ID).
-			Msg("newbie found, send question")
+		log.Info().Str("user", newMember.FirstName).Msg("newbie found, send question")
 
 		qID := rand.Intn(len(quest))
 
