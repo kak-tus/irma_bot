@@ -1,4 +1,10 @@
-2023-08-21 v1.5.1
+2023-08-31 v1.5.6
+  - Ban old users with first message (bigger newbie store period).
+
+2023-08-31 v1.5.2, v1.5.3, v1.5.4, v1.5.5
+  - More logs.
+
+2023-08-21 v1.5.1,
   - More logs.
   - Use zerolog (I prefer it now) for some new log.
 
