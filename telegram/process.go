@@ -36,6 +36,8 @@ https://github.com/kak-tus/irma_bot
 const botNameTemplate = "__IRMA_BOT_NAME__"
 
 func (hdl *InstanceObj) process(ctx context.Context, msg tgbotapi.Update) error {
+	hdl.log.Debug().Interface("msg", msg).Msg("got message")
+
 	if msg.Message != nil {
 		return hdl.processMsg(ctx, msg.Message)
 	} else if msg.CallbackQuery != nil {
@@ -46,8 +48,6 @@ func (hdl *InstanceObj) process(ctx context.Context, msg tgbotapi.Update) error 
 }
 
 func (hdl *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) error {
-	hdl.log.Debug().Interface("msg", msg).Msg("got message")
-
 	textWithBotName := strings.ReplaceAll(usageText, botNameTemplate, hdl.cnf.BotName)
 
 	if msg.Chat.IsPrivate() {
