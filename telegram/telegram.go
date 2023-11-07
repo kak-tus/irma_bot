@@ -28,6 +28,7 @@ type InstanceObj struct {
 	router *chi.Mux
 	stop   chan bool
 	stor   *storage.InstanceObj
+	upd    tgbotapi.UpdatesChannel
 }
 
 type Options struct {
@@ -80,7 +81,7 @@ func (hdl *InstanceObj) Start() error {
 
 	hdl.oldLog.Info(resp.Description)
 
-	upd := hdl.bot.ListenForWebhook("/" + hdl.cnf.Path)
+	hdl.upd = hdl.bot.ListenForWebhook("/" + hdl.cnf.Path)
 
 	// HACK TODO
 	// We must register our handler again in internal router
@@ -89,6 +90,8 @@ func (hdl *InstanceObj) Start() error {
 	hdl.router.Route("/", func(r chi.Router) {
 		r.Handle("/"+hdl.cnf.Path, http.DefaultServeMux)
 	})
+
+	hdl.processors()
 
 	hdl.lock.Add(1)
 	defer hdl.lock.Done()
@@ -106,16 +109,32 @@ func (hdl *InstanceObj) Start() error {
 		case <-hdl.stop:
 			tick.Stop()
 			return nil
-		case msg := <-upd:
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-
-			err := hdl.process(ctx, msg)
-			if err != nil {
-				hdl.oldLog.Error(err)
-			}
-
-			cancel()
 		}
+	}
+}
+
+func (hdl *InstanceObj) processors() {
+	hdl.lock.Add(hdl.cnf.Processors)
+
+	for i := 0; i < hdl.cnf.Processors; i++ {
+		go func() {
+			for {
+				select {
+				case <-hdl.stop:
+					hdl.lock.Done()
+					return
+				case msg := <-hdl.upd:
+					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+					err := hdl.process(ctx, msg)
+					if err != nil {
+						hdl.oldLog.Error(err)
+					}
+
+					cancel()
+				}
+			}
+		}()
 	}
 }
 

@@ -1,3 +1,6 @@
+2023-11-07 v1.6.0
+  - Parallel message processing.
+
 2023-08-31 v1.5.6
   - Ban old users with first message (bigger newbie store period).
 

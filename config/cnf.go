@@ -10,11 +10,12 @@ type Cnf struct {
 }
 
 type Tg struct {
-	BotName string
-	Path    string
-	Proxy   string
-	Token   string
-	URL     string
+	BotName    string
+	Path       string
+	Processors int `default:"10"`
+	Proxy      string
+	Token      string
+	URL        string
 }
 
 type DB struct {
