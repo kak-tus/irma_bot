@@ -1,3 +1,6 @@
+2023-11-11 v1.6.5
+  - Corrrect ban count.
+
 2023-11-11 v1.6.4
   - Read and set ban for emojii.
 
