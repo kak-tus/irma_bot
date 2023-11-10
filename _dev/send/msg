@@ -1,0 +1,17 @@
+Здравствуйте.
+
+Недавно у Telegram началась проблема с отправкой уведомлений боту о присоединении пользователя к чату. Либо спамеры нашли способ обойти этот механизм.
+
+В связи с этим добавлена новая настройка: бан за эмоджи в сообщении.
+Эту настройку можно включить в настройках бота.
+
+Будьте осторожны - при включении опции бот начнёт удалять сообщения и ограничивать пользователя, даже если он не новичок и давно вступил в чат. К сожалению, другого способа узнать о том, новичок ли пользователь - я не нашёл.
+
+Hello.
+
+Some times ago Telegram started issuing with sending chat join notifications to the bot. May be spammers found a method to hack this.
+
+So, a new option was added: ban for emojii in the message.
+This option can be enabled in bot settings.
+
+Be careful - with this option ALL messages from ALL users will be deleted and users will be banned, also not newbies. Unfortunately, I can't find other way to temporary fix this issue.
