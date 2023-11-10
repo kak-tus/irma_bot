@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/forPelevin/gomoji"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/kak-tus/irma_bot/storage"
 )
@@ -123,6 +124,33 @@ func (hdl *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) e
 
 	if msg.NewChatMembers != nil {
 		return hdl.newMembers(ctx, log, msg)
+	}
+
+	group, err := hdl.model.Queries.GetGroup(ctx, msg.Chat.ID)
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+
+	if group.BanEmojiiCount.Valid && group.BanEmojiiCount.Int32 > 0 &&
+		len(gomoji.CollectAll(msg.Text)) > int(group.BanEmojiiCount.Int32) {
+		log.Info().Msg("ban for emojii not newbie")
+
+		if err := hdl.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
+			return err
+		}
+
+		kick := tgbotapi.KickChatMemberConfig{
+			ChatMemberConfig: tgbotapi.ChatMemberConfig{
+				ChatID: msg.Chat.ID,
+				UserID: msg.From.ID,
+			},
+			UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
+		}
+
+		_, err = hdl.bot.Request(kick)
+		if err != nil {
+			return err
+		}
 	}
 
 	name := fmt.Sprintf("@%s", hdl.cnf.BotName)
