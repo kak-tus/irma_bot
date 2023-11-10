@@ -1,3 +1,6 @@
+2023-11-10 v1.6.1
+  - Try fix getting join requests.
+
 2023-11-07 v1.6.0
   - Parallel message processing.
 

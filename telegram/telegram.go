@@ -74,6 +74,8 @@ func (hdl *InstanceObj) Start() error {
 		return err
 	}
 
+	webhookCnf.AllowedUpdates = []string{"message", "callback_query", "chat_member"}
+
 	resp, err := hdl.bot.Request(webhookCnf)
 	if err != nil {
 		return err
