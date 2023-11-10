@@ -1,3 +1,6 @@
+2023-11-11 v1.6.6
+  - Support for send message to all chats.
+
 2023-11-11 v1.6.5
   - Corrrect ban count.
 

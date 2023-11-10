@@ -21,3 +21,6 @@ ON CONFLICT (id) DO UPDATE SET
     EXCLUDED.ban_question, EXCLUDED.ban_timeout, EXCLUDED.ignore_domain,
     EXCLUDED.ban_emojii_count
   );
+
+-- name: GetGroups :many
+SELECT id FROM public.groups;
