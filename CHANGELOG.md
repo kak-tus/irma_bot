@@ -1,3 +1,6 @@
+2023-11-11 v1.6.4
+  - Read and set ban for emojii.
+
 2023-11-11 v1.6.3
   - Support for set ban all users for emojii. This is temporary fix, because telegram does not send join chat messages.
 
