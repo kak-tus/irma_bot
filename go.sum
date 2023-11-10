@@ -157,6 +157,8 @@ github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/kak-tus/nan v0.7.0 h1:Ydv5qGT6LRjEIjhSavFcNJTe1vJSWl769RtPlPusEFo=
 github.com/kak-tus/nan v0.7.0/go.mod h1:CCI+0J7sI3S3/E2sxBfWj2IB0S8hIFYEXWf8ltU2bco=
+github.com/kak-tus/nan v0.9.0 h1:Bx3oPw+Uk37kzQRdTZzhTwvlzjOzRoPiWl9pES9KAt0=
+github.com/kak-tus/nan v0.9.0/go.mod h1:CCI+0J7sI3S3/E2sxBfWj2IB0S8hIFYEXWf8ltU2bco=
 github.com/kelseyhightower/envconfig v1.4.0 h1:Im6hONhd3pLkfDFsbRgu68RDNkGF1r3dvMUtDTo2cv8=
 github.com/kelseyhightower/envconfig v1.4.0/go.mod h1:cccZRl6mQpaq41TPp5QxidR+Sa3axMbJDNb//FQX6Gg=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=

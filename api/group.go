@@ -34,11 +34,12 @@ func (hdl *API) GetGroup(w http.ResponseWriter, r *http.Request, params GetGroup
 	defaultGroup := hdl.model.GetDefaultGroup()
 
 	respGroup := GetGroupResponse{
-		BanQuestion: defaultGroup.BanQuestion.Bool,
-		BanTimeout:  defaultGroup.BanTimeout.Int32,
-		BanUrl:      defaultGroup.BanUrl.Bool,
-		Greeting:    defaultGroup.Greeting.String,
-		Id:          data.ChatID,
+		BanQuestion:    defaultGroup.BanQuestion.Bool,
+		BanTimeout:     defaultGroup.BanTimeout.Int32,
+		BanUrl:         defaultGroup.BanUrl.Bool,
+		Greeting:       defaultGroup.Greeting.String,
+		Id:             data.ChatID,
+		BanEmojiiCount: defaultGroup.BanEmojiiCount.Addr(),
 	}
 
 	if group.BanQuestion.Valid {
@@ -88,6 +89,10 @@ func (hdl *API) GetGroup(w http.ResponseWriter, r *http.Request, params GetGroup
 
 	if len(group.IgnoreDomain) != 0 {
 		respGroup.IgnoreDomains = &group.IgnoreDomain
+	}
+
+	if group.BanEmojiiCount.Valid {
+		respGroup.BanEmojiiCount = group.BanEmojiiCount.Addr()
 	}
 
 	_ = json.NewEncoder(w).Encode(respGroup)
@@ -146,9 +151,10 @@ func (hdl *API) SaveGroup(w http.ResponseWriter, r *http.Request, params SaveGro
 		Questions: queries_types.QuestionsDB{
 			Questions: questions,
 		},
-		BanUrl:      nan.Bool(group.BanUrl),
-		BanQuestion: nan.Bool(group.BanQuestion),
-		BanTimeout:  nan.Int32(group.BanTimeout),
+		BanUrl:         nan.Bool(group.BanUrl),
+		BanQuestion:    nan.Bool(group.BanQuestion),
+		BanTimeout:     nan.Int32(group.BanTimeout),
+		BanEmojiiCount: nan.Int32Addr(group.BanEmojiiCount),
 	}
 
 	if group.IgnoreDomains != nil {

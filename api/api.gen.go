@@ -40,13 +40,14 @@ type Error struct {
 
 // Group defines model for Group.
 type Group struct {
-	BanQuestion   bool      `json:"ban_question"`
-	BanTimeout    int32     `json:"ban_timeout"`
-	BanUrl        bool      `json:"ban_url"`
-	Greeting      string    `json:"greeting"`
-	Id            int64     `json:"id"`
-	IgnoreDomains *Domains  `json:"ignore_domains,omitempty"`
-	Questions     Questions `json:"questions"`
+	BanEmojiiCount *int32    `json:"ban_emojii_count,omitempty"`
+	BanQuestion    bool      `json:"ban_question"`
+	BanTimeout     int32     `json:"ban_timeout"`
+	BanUrl         bool      `json:"ban_url"`
+	Greeting       string    `json:"greeting"`
+	Id             int64     `json:"id"`
+	IgnoreDomains  *Domains  `json:"ignore_domains,omitempty"`
+	Questions      Questions `json:"questions"`
 }
 
 // Healthcheck defines model for Healthcheck.
@@ -382,22 +383,22 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8xXTW8bNxD9K8K0R8YrO44Pe3ORNhVaFHXbW2AE1O5oxVgkN+SsGjXgfy9I7qeWghzX",
-	"DXzTksOZN284j6MvUGhZa4WKLORfoOaGSyQ04esv/YDK/xAKcvjUoDkAA8UlQg4UNhkY/NQIgyXkZBpk",
-	"YIstSu5P0aH2hpaMUBU456IxWvpBlwJDiD/5Ht8Z3dR/xB2/VmhFqMJPXtc7UXASWmUfrQ5ghgDfG9xA",
-	"Dt9lQxJZ3LVZcDoEHRDGFVtrZSOEd0gtgrj4f0Ao0RZG1N4J5POIjvm1QPezowhe33LiJ5BMozoGPyPf",
-	"0bbYYvHw7GBGvlNwUqEdg5UiNIrvfjRGm2fHFLym0KTDOga/afpJN6r8xnjSYR0bN9ETsLRtqtcfsaBU",
-	"3Ll7b9PC9R5ulf0bTdAPo2s01DZ3oY3xPocga613yJUHTfg57Ej++VdUFW0hv1wuGUih+m8205BxN7+P",
-	"Pu7ZcQqsRRRACEJpz3HeZuCYh7OKJy4jmO6rj8KN4Qdv+lZLLtRRDldvbmaoO9PH42ldH+E5ByjenFkZ",
-	"JFrLK0xJ8pTOzjDFaBSzme81Vx+CcIt4reZ19hYkJOomlHujjeQEOQhFr68gJChkIyG/ienFjyE7oQir",
-	"WBvvqjG7dJzKIJLPananzl0qBqI8hnZzDSkEolLa4IdyKOf5Klp/sOPo7Jm73vC4OqKEUZZsSv1AzpTx",
-	"ceRUWceCPNcCBnej2k4rz4cWO99Z9nTHP6XlWR89ldPdmOtHtVuf5Vc23PC2zugh2k3uVMkJX22ERDib",
-	"Ie0SaXkroTa6k3YedbUdxm5VafCw+KX5R0bZmCr47e8rH1bQzhuvjOSLtabFxoQ3olzE/T0aG+0vL5YX",
-	"S+9G16h4LSCH12GJQc1pGxLMqk4RKgxQZpPFIloELya8PqtyNP0EZ8O4+T5dosEkTjLg7o/mt6vl8lR9",
-	"e7ssNXJdL6/PHzz56L55TNgTI4RvBl75pCFydO8Y1NomePSP7wki+3f5PzHZDeSH09mMZvZsNrC7p5Qj",
-	"MVK8sHo4Btl2Ko7Jez4W0OMCTfe+nqXkODzCGvQgQqXur9rJZgwWi9KLVaIjByX7xl05+/vxIm4Bb2jr",
-	"mfVzLpp9R0UYPmBLVNs8y4SR/NVa0wU9ZLwW2f4y0ND66LU5VMmx/jvesNFCCObu3b8BAAD//94MlR+N",
-	"DwAA",
+	"H4sIAAAAAAAC/8xX32/bNhD+V4zbHtnITtM86C1Dt87YMCzb3oogoKWzzMQkVfLk1Sv0vw8k9csWBaVZ",
+	"VuRNIk/3fffx7nj6ApmWpVaoyEL6BUpuuERC49/+0o+o3INQkMKnCs0RGCguEVIgv8nA4KdKGMwhJVMh",
+	"A5vtUHL3FR1LZ2jJCFVAXdfBGC39oHOBHuJPfsAPRlflH2HHrWVaESr/yMtyLzJOQqvkwWpPpgf43uAW",
+	"Uvgu6YNIwq5NvNMetGcYVmyplQ0UPiA1DMLi/0EhR5sZUTonkI4Ra+bWvNwvzsJ7fc+JTzA5Ra0Z/Ix8",
+	"T7tsh9nji5MZ+I7RiUHXDNaK0Ci+/9EYbV6ck/caYxOHrRn8puknXan8G/OJw9ZsWETP4NKUqd48YEYx",
+	"3LF7Z9PQdR5ulP0bje8fRpdoqCnuTBvjfPYgG633yJUjTfjZ70j++VdUBe0gXS2XDKRQ3Tsb9ZBhNX8M",
+	"Pu7YeQisYeRJCEJp5zRvIqiZo7MOX6wCmfatQ+HG8KMzfa8lF+oshst31yPWrenT+TSuz/jMEQqZMzoG",
+	"idbyAmMt+VTO1jCmaGhmI98bru5R6gch7jNdhXTbaiM5QQpC0dtL8DEIWclO0vCy7FCEIiyC/M6fvwhE",
+	"SNNx3jgLEhJ1NQN2PQRbTYFVZh/HKQwiOZVGOTqXpAxEfk7t+gpiDEShtMH7vE+P+ayw7sNWo9lvbjvD",
+	"89MWOQyiPJO+F+dU8SFyLE2GDX7cWxjcDs72NJN4X7LzlWqnO8hzWgjr0GMx3Q61flL5dlF+ZQH3d/VI",
+	"HqL9SU7lnPDNVkiE2QhpHwnLWQm11e1VwUOfboa7G5UbPC5+qf6RoQ2d3gg3v68drKC9M14byRcbTYut",
+	"8XdOvgj7BzQ22K8ulhdL50aXqHgpIIW3folByWnnA0yKtsMU6KmMJpVFsPBejL/N1vlgmvLO+vH1Y/yI",
+	"epMwGUF9dzYPXi6XU+fb2SWxEe5qeTX/4eQl/u4psBMjiSsGXrigIWh0VzMotY3o6C7zCSG7e/4/KdkO",
+	"+MfpaAb/AMnoB6B+znFERpRXdh41g2R32hyjeT5soOcHdLr39SpFx+sBV98PAlVqf/0mi9FbLHLXrCIV",
+	"2Xeyb1yVo9+ZV5EFvKKdU9bNzWgOrRR++IAdUWnTJBFG8jcbTRf0mPBSJIeVl6Hx0fVmf0o1695Dhg0W",
+	"PFh9V/8bAAD//wIZv2TdDwAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

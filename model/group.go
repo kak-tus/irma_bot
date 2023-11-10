@@ -28,11 +28,12 @@ var defaultQuestions = queries_types.Questions{
 }
 
 var defaultGroup = queries.GetGroupRow{
-	BanQuestion: nan.Bool(true),
-	BanUrl:      nan.Bool(true),
-	Greeting:    nan.String(defaultGreeting),
-	Questions:   queries_types.QuestionsDB{Questions: defaultQuestions},
-	BanTimeout:  nan.Int32(1),
+	BanEmojiiCount: nan.Int32(0),
+	BanQuestion:    nan.Bool(true),
+	BanTimeout:     nan.Int32(1),
+	BanUrl:         nan.Bool(true),
+	Greeting:       nan.String(defaultGreeting),
+	Questions:      queries_types.QuestionsDB{Questions: defaultQuestions},
 }
 
 func (hdl *Model) GetDefaultGroup() queries.GetGroupRow {

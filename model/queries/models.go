@@ -22,6 +22,7 @@ type Group struct {
 	// Ban by question.
 	BanQuestion nan.NullBool
 	// Ban delay after question
-	BanTimeout   nan.NullInt32
-	IgnoreDomain []string
+	BanTimeout     nan.NullInt32
+	IgnoreDomain   []string
+	BanEmojiiCount nan.NullInt32
 }

@@ -13,7 +13,7 @@ require (
 	github.com/goccy/go-json v0.9.7
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/json-iterator/go v1.1.12
-	github.com/kak-tus/nan v0.7.0
+	github.com/kak-tus/nan v0.9.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lib/pq v1.10.2
 	github.com/rs/zerolog v1.30.0
