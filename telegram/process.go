@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/forPelevin/gomoji"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/kak-tus/irma_bot/storage"
 )
@@ -39,10 +38,13 @@ const botNameTemplate = "__IRMA_BOT_NAME__"
 func (hdl *InstanceObj) process(ctx context.Context, msg tgbotapi.Update) error {
 	hdl.log.Debug().Interface("msg", msg).Msg("got message")
 
-	if msg.Message != nil {
+	switch {
+	case msg.Message != nil:
 		return hdl.processMsg(ctx, msg.Message)
-	} else if msg.CallbackQuery != nil {
+	case msg.CallbackQuery != nil:
 		return hdl.processCallback(ctx, msg.CallbackQuery)
+	case msg.ChatMember != nil:
+		return hdl.processChatMember(ctx, msg.ChatMember)
 	}
 
 	return nil
@@ -50,6 +52,9 @@ func (hdl *InstanceObj) process(ctx context.Context, msg tgbotapi.Update) error 
 
 func (hdl *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) error {
 	textWithBotName := strings.ReplaceAll(usageText, botNameTemplate, hdl.cnf.BotName)
+
+	log := hdl.log.With().Int64("chat_id", msg.Chat.ID).
+		Str("chat_name", msg.Chat.UserName).Str("chat_title", msg.Chat.Title).Logger()
 
 	if msg.Chat.IsPrivate() {
 		resp := tgbotapi.NewMessage(msg.Chat.ID, textWithBotName)
@@ -64,16 +69,20 @@ func (hdl *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) e
 
 	// Ban users with extra long names
 	// It's probably "name spammers"
-	banned, err := hdl.banLongNames(msg)
+	banned, err := hdl.banLongNames(log, msg.Chat.ID, msg.NewChatMembers)
 	if err != nil {
 		return err
 	}
 
 	if banned {
+		if err := hdl.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
+			return err
+		}
+
 		return nil
 	}
 
-	banned, err = hdl.banKickPool(ctx, msg)
+	banned, err = hdl.banKickPool(ctx, log, msg)
 	if err != nil {
 		return err
 	}
@@ -114,43 +123,13 @@ func (hdl *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) e
 		return err
 	}
 
-	log := hdl.log.With().Int64("chat_id", msg.Chat.ID).
-		Str("chat_name", msg.Chat.UserName).Str("chat_title", msg.Chat.Title).Logger()
-
 	// In case of newbie we got count >0, for ordinary user count=0
 	if cnt > 0 && cnt <= 4 {
 		return hdl.messageFromNewbie(ctx, log, msg)
 	}
 
 	if msg.NewChatMembers != nil {
-		return hdl.newMembers(ctx, log, msg)
-	}
-
-	group, err := hdl.model.Queries.GetGroup(ctx, msg.Chat.ID)
-	if err != nil && err != sql.ErrNoRows {
-		return err
-	}
-
-	if group.BanEmojiiCount.Valid && group.BanEmojiiCount.Int32 > 0 &&
-		len(gomoji.CollectAll(msg.Text)) >= int(group.BanEmojiiCount.Int32) {
-		log.Info().Msg("ban for emojii not newbie")
-
-		if err := hdl.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
-			return err
-		}
-
-		kick := tgbotapi.KickChatMemberConfig{
-			ChatMemberConfig: tgbotapi.ChatMemberConfig{
-				ChatID: msg.Chat.ID,
-				UserID: msg.From.ID,
-			},
-			UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
-		}
-
-		_, err = hdl.bot.Request(kick)
-		if err != nil {
-			return err
-		}
+		return hdl.newMembersInMessage(ctx, log, msg)
 	}
 
 	name := fmt.Sprintf("@%s", hdl.cnf.BotName)
@@ -225,4 +204,34 @@ func (hdl *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callb
 	}
 
 	return nil
+}
+
+func (hdl *InstanceObj) processChatMember(ctx context.Context, msg *tgbotapi.ChatMemberUpdated) error {
+	if msg.NewChatMember.IsMember {
+		return nil
+	}
+
+	if msg.NewChatMember.Status != "member" {
+		return nil
+	}
+
+	if msg.NewChatMember.User == nil {
+		return nil
+	}
+
+	log := hdl.log.With().Int64("chat_id", msg.Chat.ID).
+		Str("chat_name", msg.Chat.UserName).Str("chat_title", msg.Chat.Title).Logger()
+
+	// Ban users with extra long names
+	// It's probably "name spammers"
+	banned, err := hdl.banLongNames(log, msg.Chat.ID, []tgbotapi.User{*msg.NewChatMember.User})
+	if err != nil {
+		return err
+	}
+
+	if banned {
+		return nil
+	}
+
+	return hdl.newMembers(ctx, log, msg.Chat.ID, []tgbotapi.User{*msg.NewChatMember.User}, 0)
 }

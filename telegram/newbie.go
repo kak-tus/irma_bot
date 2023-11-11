@@ -49,33 +49,39 @@ func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, log zerolog.Logge
 	return nil
 }
 
-func (hdl *InstanceObj) newMembers(ctx context.Context, log zerolog.Logger, msg *tgbotapi.Message) error {
+func (hdl *InstanceObj) newMembersInMessage(ctx context.Context, log zerolog.Logger, msg *tgbotapi.Message) error {
 	isAdm, err := hdl.isAdmin(msg.Chat.ID, msg.From.ID)
 	if err != nil {
 		return err
 	}
 
 	if isAdm {
-		hdl.oldLog.Infow(
-			"Newbie added by admin, it is normal",
-			"Admin", msg.From.ID,
-		)
-
+		log.Info().Int64("admin", msg.From.ID).Msg("newbie added by admin, it is normal")
 		return nil
 	}
 
-	gr, err := hdl.model.Queries.GetGroup(ctx, msg.Chat.ID)
+	return hdl.newMembers(ctx, log, msg.Chat.ID, msg.NewChatMembers, msg.MessageID)
+}
+
+func (hdl *InstanceObj) newMembers(
+	ctx context.Context,
+	log zerolog.Logger,
+	chatID int64,
+	users []tgbotapi.User,
+	initialMessageID int,
+) error {
+	gr, err := hdl.model.Queries.GetGroup(ctx, chatID)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
 	defaultGroup := hdl.model.GetDefaultGroup()
 
-	for _, m := range msg.NewChatMembers {
-		log.Info().Str("user", m.FirstName+" "+m.LastName).
-			Str("user_name", m.UserName).Msg("newbie found, add messages")
+	for _, usr := range users {
+		log.Info().Str("user", usr.FirstName+" "+usr.LastName).
+			Str("user_name", usr.UserName).Msg("newbie found, add messages")
 
-		err := hdl.stor.AddNewbieMessages(ctx, msg.Chat.ID, int(m.ID))
+		err := hdl.stor.AddNewbieMessages(ctx, chatID, int(usr.ID))
 		if err != nil {
 			return err
 		}
@@ -97,31 +103,36 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, log zerolog.Logger, msg 
 		greet = gr.Greeting.String
 	}
 
-	for _, newMember := range msg.NewChatMembers {
-		log.Info().Str("user", newMember.FirstName+" "+newMember.LastName).
-			Str("user_name", newMember.UserName).Msg("newbie found, send question")
+	banTimeout := time.Duration(defaultGroup.BanTimeout.Int32) * time.Minute
+	if gr.BanTimeout.Valid {
+		banTimeout = time.Duration(gr.BanTimeout.Int32) * time.Minute
+	}
+
+	for _, usr := range users {
+		log.Info().Str("user", usr.FirstName+" "+usr.LastName).
+			Str("user_name", usr.UserName).Msg("newbie found, send question")
 
 		qID := rand.Intn(len(quest))
 
 		var name string
-		if newMember.UserName != "" {
-			name = newMember.UserName
+		if usr.UserName != "" {
+			name = usr.UserName
 		} else {
-			name = newMember.FirstName
+			name = usr.FirstName
 
-			if newMember.LastName != "" {
-				name += " " + newMember.LastName
+			if usr.LastName != "" {
+				name += " " + usr.LastName
 			}
 		}
 
 		txt := fmt.Sprintf("@%s %s\n\n%s", name, greet, quest[qID].Text)
 
-		resp := tgbotapi.NewMessage(msg.Chat.ID, txt)
+		resp := tgbotapi.NewMessage(chatID, txt)
 
 		btns := make([][]tgbotapi.InlineKeyboardButton, len(quest[qID].Answers))
 
 		for i, a := range quest[qID].Answers {
-			id := fmt.Sprintf("%d_%d_%d_%d", newMember.ID, msg.Chat.ID, qID, i)
+			id := fmt.Sprintf("%d_%d_%d_%d", usr.ID, chatID, qID, i)
 			btns[i] = []tgbotapi.InlineKeyboardButton{tgbotapi.NewInlineKeyboardButtonData(a.Text, id)}
 		}
 
@@ -132,40 +143,37 @@ func (hdl *InstanceObj) newMembers(ctx context.Context, log zerolog.Logger, msg 
 			return err
 		}
 
-		banTimeout := time.Duration(defaultGroup.BanTimeout.Int32) * time.Minute
-		if gr.BanTimeout.Valid {
-			banTimeout = time.Duration(gr.BanTimeout.Int32) * time.Minute
-		}
-
 		act := storage.Action{
 			ChatID:    res.Chat.ID,
 			Type:      storage.ActionTypeDelete,
 			MessageID: res.MessageID,
-			UserID:    int(newMember.ID),
+			UserID:    int(usr.ID),
 		}
 		if err := hdl.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err
 		}
 
-		err = hdl.stor.SetKicked(ctx, msg.Chat.ID, int(newMember.ID), banTimeout)
+		err = hdl.stor.SetKicked(ctx, chatID, int(usr.ID), banTimeout)
 		if err != nil {
 			return err
 		}
 
-		act = storage.Action{
-			ChatID:    msg.Chat.ID,
-			Type:      storage.ActionTypeDelete,
-			MessageID: msg.MessageID,
-			UserID:    int(newMember.ID),
-		}
-		if err := hdl.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
-			return err
+		if initialMessageID != 0 {
+			act = storage.Action{
+				ChatID:    chatID,
+				Type:      storage.ActionTypeDelete,
+				MessageID: initialMessageID,
+				UserID:    int(usr.ID),
+			}
+			if err := hdl.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
+				return err
+			}
 		}
 
 		act = storage.Action{
-			ChatID: msg.Chat.ID,
+			ChatID: chatID,
 			Type:   storage.ActionTypeKick,
-			UserID: int(newMember.ID),
+			UserID: int(usr.ID),
 		}
 		if err := hdl.stor.AddToActionPool(ctx, act, banTimeout); err != nil {
 			return err

@@ -5,23 +5,21 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/rs/zerolog"
 )
 
 const nameLimit = 100
 
-func (hdl *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
-	if msg.NewChatMembers == nil {
+func (hdl *InstanceObj) banLongNames(log zerolog.Logger, chatID int64, users []tgbotapi.User) (bool, error) {
+	if len(users) == 0 {
 		return false, nil
 	}
 
 	var toDel bool
 
-	for _, u := range msg.NewChatMembers {
-		if len(u.FirstName) >= nameLimit || len(u.LastName) >= nameLimit {
-			hdl.oldLog.Infow("Ban long name",
-				"User", u.FirstName,
-				"Chat", msg.Chat.ID,
-			)
+	for _, usr := range users {
+		if len(usr.FirstName) >= nameLimit || len(usr.LastName) >= nameLimit {
+			log.Info().Str("first_name", usr.FirstName).Str("last_name", usr.LastName).Msg("ban long name")
 
 			toDel = true
 
@@ -33,11 +31,11 @@ func (hdl *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 		return false, nil
 	}
 
-	for _, u := range msg.NewChatMembers {
+	for _, usr := range users {
 		kick := tgbotapi.KickChatMemberConfig{
 			ChatMemberConfig: tgbotapi.ChatMemberConfig{
-				ChatID: msg.Chat.ID,
-				UserID: u.ID,
+				ChatID: chatID,
+				UserID: usr.ID,
 			},
 			UntilDate: time.Now().In(time.UTC).AddDate(0, 0, 1).Unix(),
 		}
@@ -48,14 +46,10 @@ func (hdl *InstanceObj) banLongNames(msg *tgbotapi.Message) (bool, error) {
 		}
 	}
 
-	if err := hdl.deleteMessage(msg.Chat.ID, msg.MessageID); err != nil {
-		return true, err
-	}
-
 	return true, nil
 }
 
-func (hdl *InstanceObj) banKickPool(ctx context.Context, msg *tgbotapi.Message) (bool, error) {
+func (hdl *InstanceObj) banKickPool(ctx context.Context, log zerolog.Logger, msg *tgbotapi.Message) (bool, error) {
 	kicked, err := hdl.stor.IsKicked(ctx, msg.Chat.ID, int(msg.From.ID))
 	if err != nil {
 		return false, err
@@ -65,10 +59,7 @@ func (hdl *InstanceObj) banKickPool(ctx context.Context, msg *tgbotapi.Message) 
 		return false, err
 	}
 
-	hdl.oldLog.Infow("User found in kick pool",
-		"User", msg.From.FirstName,
-		"Chat", msg.Chat.ID,
-	)
+	log.Info().Str("user", msg.From.FirstName).Msg("user found in kick pool")
 
 	kick := tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: tgbotapi.ChatMemberConfig{

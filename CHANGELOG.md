@@ -1,3 +1,7 @@
+2023-11-11 v1.7.0
+  - Remove support for set ban all users for emojii.
+  - Process chat_member actions to get newbies from it.
+
 2023-11-11 v1.6.6
   - Support for send message to all chats.
 
