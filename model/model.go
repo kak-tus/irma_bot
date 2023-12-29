@@ -1,9 +1,9 @@
 package model
 
 import (
-	"database/sql"
+	"context"
 
-	_ "github.com/jackc/pgx/v4/stdlib" // pgx
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kak-tus/irma_bot/model/queries"
 	"go.uber.org/zap"
 )
@@ -14,25 +14,37 @@ type Options struct {
 }
 
 type Model struct {
+	conn    *pgxpool.Pool
 	log     *zap.SugaredLogger
 	Queries *queries.Queries
+	url     string
 }
 
-func NewModel(opts Options) (*Model, error) {
-	conn, err := sql.Open("pgx", opts.URL)
-	if err != nil {
-		return nil, err
-	}
-
-	conn.SetMaxOpenConns(2)
-	conn.SetMaxIdleConns(2)
-
-	qry := queries.New(conn)
-
+func New(opts Options) (*Model, error) {
 	mdl := &Model{
-		log:     opts.Log,
-		Queries: qry,
+		log: opts.Log,
+		url: opts.URL,
 	}
 
 	return mdl, nil
+}
+
+func (hdl *Model) Start(ctx context.Context) error {
+	conn, err := pgxpool.New(ctx, hdl.url)
+	if err != nil {
+		return err
+	}
+
+	hdl.conn = conn
+	hdl.Queries = queries.New(conn)
+
+	return nil
+}
+
+func (hdl *Model) Stop() {
+	hdl.log.Info("stop model")
+
+	hdl.conn.Close()
+
+	hdl.log.Info("stopped model")
 }

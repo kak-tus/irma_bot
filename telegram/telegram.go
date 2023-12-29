@@ -59,7 +59,7 @@ func NewTelegram(opts Options) (*InstanceObj, error) {
 		model:  opts.Model,
 		oldLog: opts.OldLog,
 		router: opts.Router,
-		stop:   make(chan bool, 1),
+		stop:   make(chan bool),
 		stor:   opts.Storage,
 	}
 
@@ -148,7 +148,7 @@ func (hdl *InstanceObj) processors() {
 func (hdl *InstanceObj) Stop() error {
 	hdl.oldLog.Info("stop telegram")
 
-	hdl.stop <- true
+	close(hdl.stop)
 	hdl.lock.Wait()
 
 	hdl.oldLog.Info("stopped telegram")

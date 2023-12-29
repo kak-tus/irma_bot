@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/kak-tus/irma_bot/api"
 	"github.com/kak-tus/irma_bot/config"
@@ -16,8 +15,8 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:generate sqlc generate
-//go:generate oapi-codegen --config openapi-codegen.yml openapi.yml
+//go:generate go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.24.0 generate
+//go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0 --config openapi-codegen.yml openapi.yml
 
 func main() {
 	log := zerolog.New(os.Stdout).With().Timestamp().Logger()
@@ -39,9 +38,15 @@ func main() {
 		URL: cnf.DB.Addr,
 	}
 
-	modelHdl, err := model.NewModel(modelOpts)
+	modelHdl, err := model.New(modelOpts)
 	if err != nil {
 		oldLog.Panic(err)
+	}
+
+	ctx := context.Background()
+
+	if err := modelHdl.Start(ctx); err != nil {
+		log.Panic().Err(err).Msg("fail start model")
 	}
 
 	storOptions := storage.Options{
@@ -103,18 +108,16 @@ func main() {
 	<-st
 	oldLog.Info("stop")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-
 	err = srv.Shutdown(ctx)
 	if err != nil {
 		oldLog.Panic(err)
 	}
 
-	cancel()
-
 	if err := tg.Stop(); err != nil {
 		oldLog.Panic(err)
 	}
+
+	modelHdl.Stop()
 
 	_ = oldLog.Sync()
 }

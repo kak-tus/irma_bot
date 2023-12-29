@@ -1,3 +1,9 @@
+2023-12-30 v1.8.0
+  - Fix bot stop.
+  - Use versioned generators.
+  - Use latest sqlc to switch to native pgx.
+  - Use native pgx pool to allow more stable db connection tuning.
+
 2023-11-11 v1.7.0
   - Remove support for set ban all users for emojii.
   - Process chat_member actions to get newbies from it.
