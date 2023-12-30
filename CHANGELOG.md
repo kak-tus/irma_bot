@@ -1,3 +1,6 @@
+2023-12-31 v1.8.1
+  - Fix group get after switch to native pgx.
+
 2023-12-30 v1.8.0
   - Fix bot stop.
   - Use versioned generators.

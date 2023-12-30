@@ -10,7 +10,7 @@ require (
 	github.com/go-chi/cors v1.2.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
-	github.com/goccy/go-json v0.9.7
+	github.com/goccy/go-json v0.10.2
 	github.com/jackc/pgx/v5 v5.5.1
 	github.com/json-iterator/go v1.1.12
 	github.com/kak-tus/nan v0.9.0

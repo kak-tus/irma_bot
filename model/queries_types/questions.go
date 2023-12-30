@@ -29,14 +29,14 @@ func (container *QuestionsDB) Scan(value any) error {
 		return nil
 	}
 
-	converted, ok := value.([]byte)
+	converted, ok := value.(string)
 	if !ok {
-		return fmt.Errorf("incorrect type %T for scan", value)
+		return fmt.Errorf("incorrect type '%T' for scan", value)
 	}
 
 	var vals Questions
 
-	if err := json.Unmarshal(converted, &vals); err != nil {
+	if err := json.Unmarshal([]byte(converted), &vals); err != nil {
 		return err
 	}
 

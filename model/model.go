@@ -5,17 +5,17 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kak-tus/irma_bot/model/queries"
-	"go.uber.org/zap"
+	"github.com/rs/zerolog"
 )
 
 type Options struct {
-	Log *zap.SugaredLogger
+	Log zerolog.Logger
 	URL string
 }
 
 type Model struct {
 	conn    *pgxpool.Pool
-	log     *zap.SugaredLogger
+	log     zerolog.Logger
 	Queries *queries.Queries
 	url     string
 }
@@ -42,9 +42,9 @@ func (hdl *Model) Start(ctx context.Context) error {
 }
 
 func (hdl *Model) Stop() {
-	hdl.log.Info("stop model")
+	hdl.log.Info().Msg("stop model")
 
 	hdl.conn.Close()
 
-	hdl.log.Info("stopped model")
+	hdl.log.Info().Msg("stopped model")
 }

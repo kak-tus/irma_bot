@@ -34,7 +34,7 @@ func main() {
 	}
 
 	modelOpts := model.Options{
-		Log: oldLog,
+		Log: log,
 		URL: cnf.DB.Addr,
 	}
 
