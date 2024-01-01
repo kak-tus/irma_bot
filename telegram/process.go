@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/kak-tus/irma_bot/storage"
 )
 
@@ -163,7 +163,7 @@ func (hdl *InstanceObj) processCallback(ctx context.Context, msg *tgbotapi.Callb
 	}
 
 	gr, err := hdl.model.Queries.GetGroup(ctx, chatID)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		return err
 	}
 

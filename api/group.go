@@ -1,12 +1,12 @@
 package api
 
 import (
-	"database/sql"
 	"io"
 	"net/http"
 	"net/url"
 
 	"github.com/goccy/go-json"
+	"github.com/jackc/pgx/v5"
 	"github.com/kak-tus/irma_bot/model/queries"
 	"github.com/kak-tus/irma_bot/model/queries_types"
 	"github.com/kak-tus/nan"
@@ -25,7 +25,7 @@ func (hdl *API) GetGroup(w http.ResponseWriter, r *http.Request, params GetGroup
 	}
 
 	group, err := hdl.model.Queries.GetGroup(r.Context(), data.ChatID)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		hdl.errorNotFound(w, err, "not found")
 		return
 	}

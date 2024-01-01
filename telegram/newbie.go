@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/forPelevin/gomoji"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/kak-tus/irma_bot/storage"
 	"github.com/rs/zerolog"
 )
@@ -71,7 +71,7 @@ func (hdl *InstanceObj) newMembers(
 	initialMessageID int,
 ) error {
 	gr, err := hdl.model.Queries.GetGroup(ctx, chatID)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && err != pgx.ErrNoRows {
 		return err
 	}
 
@@ -218,7 +218,7 @@ func (hdl *InstanceObj) isBanNewbie(
 
 	if len(urlsList) != 0 {
 		group, err := hdl.model.Queries.GetGroup(ctx, msg.Chat.ID)
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && err != pgx.ErrNoRows {
 			return false, err
 		}
 

@@ -1,3 +1,6 @@
+2024-01-02 v1.8.2
+  - Fix group, not exists in db, get after switch to native pgx.
+
 2023-12-31 v1.8.1
   - Fix group get after switch to native pgx.
 
