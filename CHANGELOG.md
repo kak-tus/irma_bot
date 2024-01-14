@@ -1,3 +1,7 @@
+2024-01-14 v1.9.0
+  - Use only chat system message to get newbies.
+  - Remove duplicate messages.
+
 2024-01-02 v1.8.2
   - Fix group, not exists in db, get after switch to native pgx.
 

@@ -128,10 +128,6 @@ func (hdl *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) e
 		return hdl.messageFromNewbie(ctx, log, msg)
 	}
 
-	if msg.NewChatMembers != nil {
-		return hdl.newMembersInMessage(ctx, log, msg)
-	}
-
 	name := fmt.Sprintf("@%s", hdl.cnf.BotName)
 
 	if strings.HasPrefix(msg.Text, name) {

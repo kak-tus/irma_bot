@@ -49,20 +49,6 @@ func (hdl *InstanceObj) messageFromNewbie(ctx context.Context, log zerolog.Logge
 	return nil
 }
 
-func (hdl *InstanceObj) newMembersInMessage(ctx context.Context, log zerolog.Logger, msg *tgbotapi.Message) error {
-	isAdm, err := hdl.isAdmin(msg.Chat.ID, msg.From.ID)
-	if err != nil {
-		return err
-	}
-
-	if isAdm {
-		log.Info().Int64("admin", msg.From.ID).Msg("newbie added by admin, it is normal")
-		return nil
-	}
-
-	return hdl.newMembers(ctx, log, msg.Chat.ID, msg.NewChatMembers, msg.MessageID)
-}
-
 func (hdl *InstanceObj) newMembers(
 	ctx context.Context,
 	log zerolog.Logger,
