@@ -39,7 +39,7 @@ func (hdl *InstanceObj) messageToBot(ctx context.Context, msg *tgbotapi.Message)
 		return err
 	}
 
-	u, err := url.Parse(hdl.cnf.URL)
+	u, err := url.Parse(hdl.cnf.URLUI)
 	if err != nil {
 		return err
 	}

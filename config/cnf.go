@@ -16,6 +16,7 @@ type Tg struct {
 	Proxy      string
 	Token      string
 	URL        string
+	URLUI      string
 }
 
 type DB struct {

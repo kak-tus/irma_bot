@@ -1,3 +1,6 @@
+2024-07-07 v1.10.0
+  - Use different urls for ui and for tg webhooks.
+
 2024-01-14 v1.9.0
   - Use only chat system message to get newbies.
   - Remove duplicate messages.
