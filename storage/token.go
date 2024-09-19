@@ -10,7 +10,7 @@ import (
 
 const (
 	tokenKey = "irma_token_{%s}"
-	tokenTTL = time.Minute * 10
+	tokenTTL = time.Minute * 30
 )
 
 type TokenData struct {

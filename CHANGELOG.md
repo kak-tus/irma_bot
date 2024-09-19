@@ -1,3 +1,6 @@
+2024-09-19 v1.10.1
+  - Bigger admin token expire timeout.
+
 2024-07-07 v1.10.0
   - Use different urls for ui and for tg webhooks.
 
