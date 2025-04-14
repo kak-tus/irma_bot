@@ -20,6 +20,7 @@ func (hdl *InstanceObj) banLongNames(log zerolog.Logger, chatID int64, users []t
 
 	for _, usr := range users {
 		// TODO FIX temporary ban annoying user
+		// Only uppercase to prevent ban normal nicknames
 		if strings.Contains(usr.UserName, "PORNO") {
 			log.Info().Str("first_name", usr.FirstName).Str("last_name", usr.LastName).Msg("ban for special name")
 
