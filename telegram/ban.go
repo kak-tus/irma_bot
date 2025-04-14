@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -18,6 +19,15 @@ func (hdl *InstanceObj) banLongNames(log zerolog.Logger, chatID int64, users []t
 	var toDel bool
 
 	for _, usr := range users {
+		// TODO FIX temporary ban annoying user
+		if strings.Contains(usr.UserName, "PORNO") {
+			log.Info().Str("first_name", usr.FirstName).Str("last_name", usr.LastName).Msg("ban for special name")
+
+			toDel = true
+
+			break
+		}
+
 		if len(usr.FirstName) >= nameLimit || len(usr.LastName) >= nameLimit {
 			log.Info().Str("first_name", usr.FirstName).Str("last_name", usr.LastName).Msg("ban long name")
 

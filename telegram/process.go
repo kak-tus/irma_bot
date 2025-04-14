@@ -124,6 +124,8 @@ func (hdl *InstanceObj) processMsg(ctx context.Context, msg *tgbotapi.Message) e
 	}
 
 	// In case of newbie we got count >0, for ordinary user count=0
+	// After 4 normal messages - user is not newbie
+	// TODO FIX configure it
 	if cnt > 0 && cnt <= 4 {
 		return hdl.messageFromNewbie(ctx, log, msg)
 	}
