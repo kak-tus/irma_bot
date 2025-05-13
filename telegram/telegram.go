@@ -14,6 +14,7 @@ import (
 	"github.com/kak-tus/irma_bot/model"
 	"github.com/kak-tus/irma_bot/storage"
 	"github.com/rs/zerolog"
+	"github.com/ssgreg/repeat"
 	"go.uber.org/zap"
 	"golang.org/x/net/proxy"
 )
@@ -159,16 +160,30 @@ func (hdl *InstanceObj) Stop() error {
 func (hdl *InstanceObj) deleteMessage(chatID int64, messageID int) error {
 	del := tgbotapi.NewDeleteMessage(chatID, messageID)
 
-	if _, err := hdl.bot.Request(del); err != nil {
-		ex, ok := err.(tgbotapi.Error)
-		if !(ok && ex.Message == "Bad Request: message to delete not found") {
-			return err
-		}
+	err := repeat.Repeat(
+		repeat.Fn(func() error {
+			if _, err := hdl.bot.Request(del); err != nil {
+				ex, ok := err.(tgbotapi.Error)
+				if !(ok && ex.Message == "Bad Request: message to delete not found") {
+					return repeat.HintTemporary(err)
+				}
 
-		hdl.oldLog.Warnw("Message in chat is already deleted",
-			"Chat", chatID,
-			"Message", messageID,
-		)
+				hdl.oldLog.Warnw("Message in chat is already deleted",
+					"Chat", chatID,
+					"Message", messageID,
+				)
+
+				return nil
+			}
+
+			return nil
+		}),
+		repeat.StopOnSuccess(),
+		repeat.LimitMaxTries(10),
+		repeat.WithDelay(repeat.FixedBackoff(time.Second).Set()),
+	)
+	if err != nil {
+		return err
 	}
 
 	return nil

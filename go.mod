@@ -16,6 +16,7 @@ require (
 	github.com/kak-tus/nan v0.9.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.30.0
+	github.com/ssgreg/repeat v1.5.1
 	github.com/stretchr/testify v1.8.1
 	github.com/zach-klippenstein/goregen v0.0.0-20160303162051-795b5e3961ea
 	go.uber.org/zap v1.20.0
