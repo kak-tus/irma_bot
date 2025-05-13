@@ -1,3 +1,9 @@
+2025-05-14 v1.10.3
+  - Show cutten user nickname if it is probably spammer.
+
+2025-04-15 v1.10.2
+  - Temporary ban annoying user.
+
 2024-09-19 v1.10.1
   - Bigger admin token expire timeout.
 

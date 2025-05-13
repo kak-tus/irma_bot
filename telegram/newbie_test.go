@@ -84,3 +84,8 @@ func TestIsBanNewbieForEntities(t *testing.T) {
 func TestEmojii(t *testing.T) {
 	require.Equal(t, 3, len(gomoji.CollectAll("🤦‍♂️ 1 🤦‍♂️ 2 🤦‍♂️ 3")))
 }
+
+func TestLen(t *testing.T) {
+	res := string([]rune("D32KAE_31_P04NO_PQX088B0T")[0:6])
+	require.Equal(t, "D32KAE", res)
+}

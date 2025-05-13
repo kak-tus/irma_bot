@@ -103,6 +103,12 @@ func (hdl *InstanceObj) newMembers(
 		var name string
 		if usr.UserName != "" {
 			name = usr.UserName
+
+			// Spammer username often has len more than 24 symbols
+			// So don't display their names fully in welcome message
+			if len([]rune(name)) > 24 {
+				name = string([]rune(name)[0:6]) + "..."
+			}
 		} else {
 			name = usr.FirstName
 
