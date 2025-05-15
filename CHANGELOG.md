@@ -1,3 +1,6 @@
+2025-05-15 v1.10.5
+  - Show cutten user nickname if it is probably spammer.
+
 2025-05-14 v1.10.4
   - Repeat some call to telegram.
 
